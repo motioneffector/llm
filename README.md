@@ -458,4 +458,4 @@ Works in all modern browsers and Node.js 18+. Uses native Fetch API (no polyfill
 
 ## License
 
-MIT © [MotionEffector](https://github.com/motioneffector)
+MIT © [motioneffector](https://github.com/motioneffector)

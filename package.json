@@ -2,7 +2,7 @@
   "name": "@motioneffector/llm",
   "version": "0.1.0",
   "description": "TypeScript client for LLM APIs with OpenRouter support, streaming, conversation management, and automatic retries",
-  "author": "MotionEffector",
+  "author": "motioneffector",
   "license": "MIT",
   "repository": {
     "type": "git",
