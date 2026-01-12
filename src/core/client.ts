@@ -158,12 +158,12 @@ function isOpenRouter(baseUrl: string): boolean {
 export function createLLMClient(options: ClientOptions): LLMClient {
   validateClientOptions(options)
 
-  const baseUrl = options.baseUrl || DEFAULT_BASE_URL
+  const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL
   const apiKey = options.apiKey
   let currentModel = options.model
   const defaultParams = options.defaultParams
-  const referer = options.referer || 'https://github.com/motioneffector/llm'
-  const title = options.title || 'LLM Client'
+  const referer = options.referer ?? 'https://github.com/motioneffector/llm'
+  const title = options.title ?? 'LLM Client'
 
   function buildHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
@@ -224,12 +224,11 @@ export function createLLMClient(options: ClientOptions): LLMClient {
     }
 
     const startTime = Date.now()
-    const model = chatOptions?.model || currentModel
+    const model = chatOptions?.model ?? currentModel
     const params = mergeParams(defaultParams, chatOptions)
     const body = buildRequestBody(messages, model, params, false)
 
-    const maxRetries =
-      chatOptions?.maxRetries !== undefined ? chatOptions.maxRetries : DEFAULT_MAX_RETRIES
+    const maxRetries = chatOptions?.maxRetries ?? DEFAULT_MAX_RETRIES
     const shouldRetry = chatOptions?.retry !== false
 
     const response = await fetchWithRetry(
@@ -282,7 +281,7 @@ export function createLLMClient(options: ClientOptions): LLMClient {
       usage,
       model: parsed.model,
       id: parsed.id,
-      finishReason: (firstChoice.finish_reason as ChatResponse['finishReason']) || null,
+      finishReason: (firstChoice.finish_reason as ChatResponse['finishReason']) ?? null,
       latency,
     }
   }
@@ -334,7 +333,7 @@ export function createLLMClient(options: ClientOptions): LLMClient {
       throw new DOMException('The operation was aborted', 'AbortError')
     }
 
-    const model = chatOptions?.model || currentModel
+    const model = chatOptions?.model ?? currentModel
     const params = mergeParams(defaultParams, chatOptions)
     const body = buildRequestBody(messages, model, params, true)
 
@@ -473,7 +472,7 @@ export function createLLMClient(options: ClientOptions): LLMClient {
     }
 
     const modelInfo = getModelInfo(currentModel)
-    const contextLength = modelInfo?.contextLength || 128000
+    const contextLength = modelInfo?.contextLength ?? 128000
 
     const available = Math.max(0, contextLength - totalTokens)
 

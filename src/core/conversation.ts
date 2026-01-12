@@ -35,7 +35,7 @@ export function createConversation(
   options?: ConversationOptions
 ): Conversation {
   let systemPrompt = options?.system
-  const messages: Message[] = [...(options?.initialMessages || [])]
+  const messages: Message[] = [...(options?.initialMessages ?? [])]
   let isProcessing = false
 
   function checkConcurrency(): void {

@@ -47,7 +47,7 @@ async function sleep(ms: number, signal?: AbortSignal): Promise<void> {
       resolve()
     }, ms)
 
-    const onAbort = () => {
+    const onAbort = (): void => {
       clearTimeout(timeout)
       reject(new DOMException('The operation was aborted', 'AbortError'))
     }
@@ -62,7 +62,7 @@ async function handleErrorResponse(response: Response): Promise<never> {
   let errorMessage = `HTTP ${response.status}`
 
   try {
-    const errorData = await response.json()
+    const errorData = (await response.json()) as { error?: { message?: string } }
     if (errorData?.error?.message) {
       errorMessage = errorData.error.message
     }
@@ -163,11 +163,11 @@ export async function fetchWithRetry(
         error instanceof ModelError ||
         error instanceof ServerError
       ) {
-        if (
-          shouldRetry &&
-          (error instanceof RateLimitError || error instanceof ServerError) &&
-          attempt < maxAttempts - 1
-        ) {
+        const isRetriableError =
+          error instanceof RateLimitError ||
+          (error instanceof ServerError && error.status >= 500)
+
+        if (shouldRetry && isRetriableError && attempt < maxAttempts - 1) {
           const retryAfter = error instanceof RateLimitError ? error.retryAfter : undefined
           const delay = getRetryDelay(attempt, retryAfter)
           await sleep(delay, signal)
@@ -196,6 +196,7 @@ export async function fetchWithRetry(
   throw new NetworkError('Request failed after retries')
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 export function parseJsonResponse<T>(data: unknown): T {
   if (!data || typeof data !== 'object') {
     throw new ParseError('Response is not a valid object')

@@ -23,7 +23,7 @@ export async function* parseSSEStream(
   try {
     while (true) {
       if (signal?.aborted) {
-        reader.cancel()
+        void reader.cancel()
         throw new DOMException('The operation was aborted', 'AbortError')
       }
 
@@ -36,7 +36,7 @@ export async function* parseSSEStream(
       buffer += decoder.decode(value, { stream: true })
 
       const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
+      buffer = lines.pop() ?? ''
 
       for (const line of lines) {
         const trimmedLine = line.trim()
