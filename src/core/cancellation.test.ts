@@ -46,7 +46,15 @@ describe('client.chat(messages, { signal })', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { signal: controller.signal })
-    ).rejects.toThrow()
+    ).rejects.toThrow(DOMException)
+
+    try {
+      await client.chat([{ role: 'user', content: 'Hello' }], { signal: controller.signal })
+    } catch (error) {
+      if (error instanceof DOMException) {
+        expect(error.name).toBe('AbortError')
+      }
+    }
   })
 
   it('throws AbortError when cancelled', async () => {
@@ -80,7 +88,15 @@ describe('client.chat(messages, { signal })', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { signal: controller.signal })
-    ).rejects.toThrow()
+    ).rejects.toThrow(DOMException)
+
+    try {
+      await client.chat([{ role: 'user', content: 'Hello' }], { signal: controller.signal })
+    } catch (error) {
+      if (error instanceof DOMException) {
+        expect(error.name).toBe('AbortError')
+      }
+    }
 
     expect(fetch).not.toHaveBeenCalled()
   })

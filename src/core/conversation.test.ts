@@ -21,21 +21,21 @@ describe('client.createConversation(options?)', () => {
 
   it('accepts optional system prompt', () => {
     const conversation = client.createConversation({ system: 'You are helpful' })
-    expect(conversation).toBeDefined()
+    expect(conversation.history).toEqual([{ role: 'system', content: 'You are helpful' }])
   })
 
   it('accepts optional initial messages', () => {
     const conversation = client.createConversation({
       initialMessages: [{ role: 'user', content: 'Hi' }],
     })
-    expect(conversation).toBeDefined()
+    expect(conversation.history).toEqual([{ role: 'user', content: 'Hi' }])
   })
 
   it('allows system message in initialMessages', () => {
     const conversation = client.createConversation({
       initialMessages: [{ role: 'system', content: 'Be brief' }],
     })
-    expect(conversation).toBeDefined()
+    expect(conversation.history).toEqual([{ role: 'system', content: 'Be brief' }])
   })
 
   it('allows both system and initialMessages with system', () => {
@@ -43,12 +43,16 @@ describe('client.createConversation(options?)', () => {
       system: 'X',
       initialMessages: [{ role: 'system', content: 'Y' }],
     })
-    expect(conversation).toBeDefined()
+    // system option takes precedence, initialMessages system is kept in history
+    expect(conversation.history).toEqual([
+      { role: 'system', content: 'X' },
+      { role: 'system', content: 'Y' },
+    ])
   })
 
   it('allows empty initialMessages array', () => {
     const conversation = client.createConversation({ initialMessages: [] })
-    expect(conversation).toBeDefined()
+    expect(conversation.history).toEqual([])
   })
 
   it('allows non-alternating messages in initialMessages', () => {
@@ -59,7 +63,11 @@ describe('client.createConversation(options?)', () => {
         { role: 'assistant', content: 'C' },
       ],
     })
-    expect(conversation).toBeDefined()
+    expect(conversation.history).toEqual([
+      { role: 'user', content: 'A' },
+      { role: 'user', content: 'B' },
+      { role: 'assistant', content: 'C' },
+    ])
   })
 
   it('starts with empty history if no options', () => {

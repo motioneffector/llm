@@ -416,7 +416,9 @@ describe('Input Validation', () => {
       }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: '' }])).resolves.toBeDefined()
+    const response = await client.chat([{ role: 'user', content: '' }])
+    expect(response.content).toBe('Response')
+    expect(response.usage).toBeDefined()
   })
 
   it('allows whitespace-only content', async () => {
@@ -430,7 +432,9 @@ describe('Input Validation', () => {
       }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: '   ' }])).resolves.toBeDefined()
+    const response = await client.chat([{ role: 'user', content: '   ' }])
+    expect(response.content).toBe('Response')
+    expect(response.usage).toBeDefined()
   })
 
   it('validates all messages in array, not just first', async () => {
@@ -489,7 +493,10 @@ describe('Input Validation', () => {
     } as Response)
 
     const longContent = 'x'.repeat(100000)
-    await expect(client.chat([{ role: 'user', content: longContent }])).resolves.toBeDefined()
+    const response = await client.chat([{ role: 'user', content: longContent }])
+    expect(response.content).toBe('Response')
+    expect(response.usage).toBeDefined()
+    expect(fetch).toHaveBeenCalled()
   })
 })
 

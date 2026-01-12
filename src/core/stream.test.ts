@@ -239,12 +239,16 @@ describe('Stream Iteration', () => {
       body: createMockStream(['A', 'B', 'C']),
     } as Response)
 
+    let chunkReceived = false
     for await (const chunk of client.stream([{ role: 'user', content: 'Hi' }])) {
       expect(chunk).toBeDefined()
+      chunkReceived = true
       break
     }
 
-    expect(true).toBe(true)
+    // Test passes if no error thrown after breaking from stream
+    // Verifies that resources are cleaned up properly
+    expect(chunkReceived).toBe(true)
   })
 })
 
