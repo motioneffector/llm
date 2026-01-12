@@ -64,8 +64,8 @@ export interface LLMClient {
 }
 
 export interface Conversation {
-  send(content: string): Promise<string>
-  sendStream(content: string): AsyncIterable<string>
+  send(content: string, options?: ChatOptions): Promise<string>
+  sendStream(content: string, options?: ChatOptions): AsyncIterable<string>
   history: Message[]
   addMessage(role: 'user' | 'assistant', content: string): void
   clear(): void

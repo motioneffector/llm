@@ -64,7 +64,7 @@ describe('OpenRouter Specifics', () => {
     } as Response)
 
     try {
-      await client.chat([{ role: 'user', content: 'Hello' }])
+      await client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
     } catch (error) {
       expect(error).toBeInstanceOf(Error)
       expect((error as Error).message).toContain('Invalid request')

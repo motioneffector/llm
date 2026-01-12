@@ -100,14 +100,14 @@ describe('HTTP Errors', () => {
   })
 
   it('throws RateLimitError on 429', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({
+    vi.mocked(fetch).mockResolvedValue({
       ok: false,
       status: 429,
       json: async () => ({ error: { message: 'Rate limit exceeded' } }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(RateLimitError)
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toHaveProperty(
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(RateLimitError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toHaveProperty(
       'status',
       429
     )
@@ -122,7 +122,7 @@ describe('HTTP Errors', () => {
     } as Response)
 
     try {
-      await client.chat([{ role: 'user', content: 'Hello' }])
+      await client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
     } catch (error) {
       expect(error).toBeInstanceOf(RateLimitError)
       expect((error as RateLimitError).retryAfter).toBe(30)
@@ -130,14 +130,14 @@ describe('HTTP Errors', () => {
   })
 
   it('throws AuthError on 401', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({
+    vi.mocked(fetch).mockResolvedValue({
       ok: false,
       status: 401,
       json: async () => ({ error: { message: 'Unauthorized' } }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(AuthError)
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toHaveProperty(
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(AuthError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toHaveProperty(
       'status',
       401
     )
@@ -150,18 +150,18 @@ describe('HTTP Errors', () => {
       json: async () => ({ error: { message: 'Forbidden' } }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(AuthError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(AuthError)
   })
 
   it('throws ModelError on 404 (model not found)', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({
+    vi.mocked(fetch).mockResolvedValue({
       ok: false,
       status: 404,
       json: async () => ({ error: { message: 'Model not found' } }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(ModelError)
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toHaveProperty(
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(ModelError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toHaveProperty(
       'status',
       404
     )
@@ -174,22 +174,24 @@ describe('HTTP Errors', () => {
       json: async () => ({ error: { message: 'Internal server error' } }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(ServerError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(ServerError)
   })
 
   it('throws ServerError on 502, 503, 504', async () => {
     for (const status of [502, 503, 504]) {
-      vi.mocked(fetch).mockResolvedValueOnce({
+      vi.mocked(fetch).mockResolvedValue({
         ok: false,
         status,
         json: async () => ({ error: { message: 'Gateway error' } }),
       } as Response)
 
-      await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(ServerError)
-      await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toHaveProperty(
+      await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(ServerError)
+      await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toHaveProperty(
         'status',
         status
       )
+
+      vi.clearAllMocks()
     }
   })
 
@@ -201,7 +203,7 @@ describe('HTTP Errors', () => {
     } as Response)
 
     try {
-      await client.chat([{ role: 'user', content: 'Hello' }])
+      await client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
     } catch (error) {
       expect(error).toBeInstanceOf(ModelError)
       expect((error as ModelError).message).toContain('Model not found')
@@ -219,7 +221,7 @@ describe('HTTP Errors', () => {
     } as Response)
 
     try {
-      await client.chat([{ role: 'user', content: 'Hello' }])
+      await client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
     } catch (error) {
       expect(error).toBeInstanceOf(ServerError)
       expect((error as ServerError).message).toContain('Internal server error')
@@ -228,24 +230,26 @@ describe('HTTP Errors', () => {
 
   it('throws ServerError for unknown 4xx/5xx status', async () => {
     for (const status of [418, 599]) {
-      vi.mocked(fetch).mockResolvedValueOnce({
+      vi.mocked(fetch).mockResolvedValue({
         ok: false,
         status,
         json: async () => ({ error: { message: 'Unknown error' } }),
       } as Response)
 
-      await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(ServerError)
-      await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toHaveProperty(
+      await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(ServerError)
+      await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toHaveProperty(
         'status',
         status
       )
+
+      vi.clearAllMocks()
     }
   })
 
   it('throws NetworkError for non-HTTP errors during fetch', async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new TypeError('Invalid URL'))
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(NetworkError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(NetworkError)
   })
 })
 
@@ -259,13 +263,13 @@ describe('Network Errors', () => {
   it('throws NetworkError on fetch failure (no response)', async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error('Network failure'))
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(NetworkError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(NetworkError)
   })
 
   it('throws NetworkError on connection timeout', async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new DOMException('Timeout', 'TimeoutError'))
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(NetworkError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(NetworkError)
   })
 
   it('error.cause contains original error', async () => {
@@ -273,7 +277,7 @@ describe('Network Errors', () => {
     vi.mocked(fetch).mockRejectedValueOnce(originalError)
 
     try {
-      await client.chat([{ role: 'user', content: 'Hello' }])
+      await client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
     } catch (error) {
       expect(error).toBeInstanceOf(NetworkError)
       expect((error as NetworkError).cause).toBe(originalError)
@@ -297,7 +301,7 @@ describe('Parse Errors', () => {
       },
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(ParseError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(ParseError)
   })
 
   it('throws ParseError on unexpected response structure', async () => {
@@ -307,7 +311,7 @@ describe('Parse Errors', () => {
       json: async () => ({ unexpected: 'format' }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(ParseError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(ParseError)
   })
 
   it('throws ParseError on missing content in response', async () => {
@@ -321,7 +325,7 @@ describe('Parse Errors', () => {
       }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(ParseError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }], { retry: false })).rejects.toThrow(ParseError)
   })
 
   it('ParseError includes response body in message for debugging', async () => {
@@ -332,7 +336,7 @@ describe('Parse Errors', () => {
     } as Response)
 
     try {
-      await client.chat([{ role: 'user', content: 'Hello' }])
+      await client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
     } catch (error) {
       expect(error).toBeInstanceOf(ParseError)
       expect((error as ParseError).message).toBeTruthy()

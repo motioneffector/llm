@@ -193,7 +193,7 @@ describe('Conversation Edge Cases', () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
 
     try {
-      await conversation.send('First message')
+      await conversation.send('First message', { retry: false })
     } catch (error) {
       expect(error).toBeInstanceOf(NetworkError)
     }
@@ -221,7 +221,7 @@ describe('Conversation Edge Cases', () => {
     const historyBefore = conversation.history.length
 
     try {
-      await conversation.send('Hello')
+      await conversation.send('Hello', { retry: false })
     } catch (error) {
       expect(error).toBeInstanceOf(NetworkError)
     }
