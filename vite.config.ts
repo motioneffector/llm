@@ -4,7 +4,7 @@ import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [
-    dts({ include: ['src'] })
+    dts({ include: ['src'], exclude: ['src/**/*.test.ts', 'src/test/**'] })
   ],
   build: {
     lib: {
