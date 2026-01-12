@@ -230,7 +230,9 @@ describe('Automatic Retry', () => {
       json: async () => ({ error: { message: 'Server error' } }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }], { maxRetries: 5 })).rejects.toThrow(ServerError)
+    await expect(
+      client.chat([{ role: 'user', content: 'Hello' }], { maxRetries: 5 })
+    ).rejects.toThrow(ServerError)
     expect(fetch).toHaveBeenCalledTimes(6)
   }, 60000)
 

@@ -67,7 +67,11 @@ function validateChatOptions(options?: ChatOptions): void {
   if (!options) return
 
   if (options.temperature !== undefined) {
-    if (typeof options.temperature !== 'number' || options.temperature < 0 || options.temperature > 2) {
+    if (
+      typeof options.temperature !== 'number' ||
+      options.temperature < 0 ||
+      options.temperature > 2
+    ) {
       throw new ValidationError('temperature must be between 0 and 2', 'temperature')
     }
   }
@@ -113,6 +117,44 @@ function isOpenRouter(baseUrl: string): boolean {
   return baseUrl.includes('openrouter')
 }
 
+/**
+ * Creates a new LLM client instance.
+ *
+ * The client provides methods for sending chat completions, streaming responses,
+ * and managing conversations. It handles authentication, retries, and error handling.
+ *
+ * @param options - Configuration options for the client
+ * @returns An LLM client with chat, stream, and conversation methods
+ *
+ * @example
+ * ```typescript
+ * const client = createLLMClient({
+ *   apiKey: 'your-openrouter-key',
+ *   model: 'anthropic/claude-sonnet-4'
+ * })
+ *
+ * // Send a chat completion
+ * const response = await client.chat([
+ *   { role: 'user', content: 'Explain quantum computing' }
+ * ])
+ * console.log(response.content)
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // With custom parameters
+ * const client = createLLMClient({
+ *   apiKey: process.env.OPENROUTER_KEY,
+ *   model: 'anthropic/claude-sonnet-4',
+ *   defaultParams: {
+ *     temperature: 0.7,
+ *     maxTokens: 1000
+ *   }
+ * })
+ * ```
+ *
+ * @throws {ValidationError} If apiKey or model is missing or invalid
+ */
 export function createLLMClient(options: ClientOptions): LLMClient {
   validateClientOptions(options)
 
@@ -126,7 +168,7 @@ export function createLLMClient(options: ClientOptions): LLMClient {
   function buildHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     }
 
     if (isOpenRouter(baseUrl)) {
@@ -142,6 +184,37 @@ export function createLLMClient(options: ClientOptions): LLMClient {
     return `${url}/chat/completions`
   }
 
+  /**
+   * Send a chat completion request and wait for the full response.
+   *
+   * @param messages - Array of messages forming the conversation
+   * @param chatOptions - Optional parameters for this request
+   * @returns A promise that resolves to the chat response with content, usage, and metadata
+   *
+   * @example
+   * ```typescript
+   * const response = await client.chat([
+   *   { role: 'user', content: 'Write a haiku about TypeScript' }
+   * ])
+   * console.log(response.content)
+   * console.log(`Used ${response.usage.totalTokens} tokens`)
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With custom options
+   * const response = await client.chat(
+   *   [{ role: 'user', content: 'Explain recursion' }],
+   *   { temperature: 0.3, maxTokens: 500 }
+   * )
+   * ```
+   *
+   * @throws {ValidationError} If messages array is empty or contains invalid messages
+   * @throws {AuthError} If API key is invalid
+   * @throws {RateLimitError} If rate limit is exceeded
+   * @throws {ModelError} If model is unavailable or invalid
+   * @throws {NetworkError} If network request fails
+   */
   async function chat(messages: Message[], chatOptions?: ChatOptions): Promise<ChatResponse> {
     validateMessages(messages)
     validateChatOptions(chatOptions)
@@ -155,7 +228,8 @@ export function createLLMClient(options: ClientOptions): LLMClient {
     const params = mergeParams(defaultParams, chatOptions)
     const body = buildRequestBody(messages, model, params, false)
 
-    const maxRetries = chatOptions?.maxRetries !== undefined ? chatOptions.maxRetries : DEFAULT_MAX_RETRIES
+    const maxRetries =
+      chatOptions?.maxRetries !== undefined ? chatOptions.maxRetries : DEFAULT_MAX_RETRIES
     const shouldRetry = chatOptions?.retry !== false
 
     const response = await fetchWithRetry(
@@ -185,7 +259,12 @@ export function createLLMClient(options: ClientOptions): LLMClient {
 
     const parsed = parseJsonResponse<OpenRouterResponse>(data)
 
-    const content = parsed.choices[0].message.content ?? ''
+    const firstChoice = parsed.choices[0]
+    if (!firstChoice) {
+      throw new ParseError('No choices in response')
+    }
+
+    const content = firstChoice.message.content ?? ''
     const usage = parsed.usage
       ? {
           promptTokens: parsed.usage.prompt_tokens,
@@ -203,11 +282,50 @@ export function createLLMClient(options: ClientOptions): LLMClient {
       usage,
       model: parsed.model,
       id: parsed.id,
-      finishReason: (parsed.choices[0].finish_reason as ChatResponse['finishReason']) || null,
+      finishReason: (firstChoice.finish_reason as ChatResponse['finishReason']) || null,
       latency,
     }
   }
 
+  /**
+   * Send a chat completion request and stream the response as it's generated.
+   *
+   * Returns an async iterable that yields text chunks as they arrive from the API.
+   * This allows for real-time display of responses to users.
+   *
+   * @param messages - Array of messages forming the conversation
+   * @param chatOptions - Optional parameters for this request
+   * @returns An async iterable that yields response chunks as strings
+   *
+   * @example
+   * ```typescript
+   * const stream = client.stream([
+   *   { role: 'user', content: 'Write a short story' }
+   * ])
+   *
+   * for await (const chunk of stream) {
+   *   process.stdout.write(chunk)
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With abort signal
+   * const controller = new AbortController()
+   * const stream = client.stream(
+   *   [{ role: 'user', content: 'Count to 100' }],
+   *   { signal: controller.signal }
+   * )
+   *
+   * setTimeout(() => controller.abort(), 5000)
+   * ```
+   *
+   * @throws {ValidationError} If messages array is empty or contains invalid messages
+   * @throws {AuthError} If API key is invalid
+   * @throws {RateLimitError} If rate limit is exceeded
+   * @throws {ModelError} If model is unavailable or invalid
+   * @throws {NetworkError} If network request fails
+   */
   function stream(messages: Message[], chatOptions?: ChatOptions): AsyncIterable<string> {
     validateMessages(messages)
     validateChatOptions(chatOptions)
@@ -249,10 +367,40 @@ export function createLLMClient(options: ClientOptions): LLMClient {
     }
   }
 
+  /**
+   * Get the current default model.
+   *
+   * @returns The current model identifier
+   *
+   * @example
+   * ```typescript
+   * const model = client.getModel()
+   * console.log(model) // 'anthropic/claude-sonnet-4'
+   * ```
+   */
   function getModel(): string {
     return currentModel
   }
 
+  /**
+   * Change the default model used for future requests.
+   *
+   * This updates the model used for all subsequent chat and stream calls
+   * unless overridden by chatOptions.model.
+   *
+   * @param model - The new model identifier
+   *
+   * @example
+   * ```typescript
+   * client.setModel('openai/gpt-4o')
+   * const response = await client.chat([
+   *   { role: 'user', content: 'Hello!' }
+   * ])
+   * // Uses GPT-4o instead of original model
+   * ```
+   *
+   * @throws {ValidationError} If model is empty or invalid
+   */
   function setModel(model: string): void {
     if (!model || model.trim() === '') {
       throw new ValidationError('model cannot be empty', 'model')
@@ -260,10 +408,61 @@ export function createLLMClient(options: ClientOptions): LLMClient {
     currentModel = model
   }
 
+  /**
+   * Create a stateful conversation with automatic history management.
+   *
+   * Conversations maintain message history and can have a system prompt.
+   * This is useful for multi-turn interactions where context needs to be preserved.
+   *
+   * @param convOptions - Options including system prompt and initial messages
+   * @returns A conversation instance with send, sendStream, and history methods
+   *
+   * @example
+   * ```typescript
+   * const conversation = client.createConversation({
+   *   system: 'You are a helpful coding assistant.'
+   * })
+   *
+   * const reply1 = await conversation.send('How do I read a file in Python?')
+   * const reply2 = await conversation.send('Now show me how to write to it.')
+   * // History is automatically maintained
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With streaming
+   * const conversation = client.createConversation()
+   * const stream = conversation.sendStream('Tell me a story')
+   *
+   * for await (const chunk of stream) {
+   *   process.stdout.write(chunk)
+   * }
+   * ```
+   */
   function createConversationWrapper(convOptions?: ConversationOptions): Conversation {
     return createConversation(chat, stream, convOptions)
   }
 
+  /**
+   * Estimate token usage for a set of messages.
+   *
+   * Returns the estimated prompt tokens and available tokens remaining
+   * in the model's context window. Useful for checking if messages will fit.
+   *
+   * @param messages - The messages to estimate tokens for
+   * @returns An object with prompt token estimate and available tokens
+   *
+   * @example
+   * ```typescript
+   * const messages = [
+   *   { role: 'user', content: 'What is TypeScript?' }
+   * ]
+   *
+   * const estimate = client.estimateChat(messages)
+   * console.log(`Prompt: ${estimate.prompt} tokens`)
+   * console.log(`Available: ${estimate.available} tokens`)
+   * ```
+   */
   function estimateChat(messages: Message[]): { prompt: number; available: number } {
     const MESSAGE_OVERHEAD = 3
 

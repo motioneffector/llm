@@ -78,10 +78,7 @@ export async function* parseSSEStream(
       throw error
     }
 
-    throw new NetworkError(
-      `Stream reading failed: ${(error as Error).message}`,
-      error as Error
-    )
+    throw new NetworkError(`Stream reading failed: ${(error as Error).message}`, error as Error)
   } finally {
     reader.releaseLock()
   }

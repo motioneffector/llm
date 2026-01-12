@@ -362,9 +362,7 @@ describe('Stream Edge Cases', () => {
     const encoder = new TextEncoder()
     const body = new ReadableStream({
       start(controller) {
-        controller.enqueue(
-          encoder.encode('data: {"choices":[{"delta":{"content":""}}]}\n\n')
-        )
+        controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":""}}]}\n\n'))
         controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"Hi"}}]}\n\n'))
         controller.enqueue(encoder.encode('data: [DONE]\n\n'))
         controller.close()

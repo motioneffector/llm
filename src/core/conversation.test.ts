@@ -259,9 +259,7 @@ describe('conversation.sendStream(content)', () => {
     const body = new ReadableStream({
       start(controller) {
         controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"Hi"}}]}\n\n'))
-        controller.enqueue(
-          encoder.encode('data: {"choices":[{"delta":{"content":" there"}}]}\n\n')
-        )
+        controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":" there"}}]}\n\n'))
         controller.enqueue(encoder.encode('data: [DONE]\n\n'))
         controller.close()
       },
@@ -400,7 +398,7 @@ describe('conversation.history', () => {
     expect(history[0]).toEqual({ role: 'system', content: 'Be helpful' })
   })
 
-  it('returns defensive copy (mutations don\'t affect internal state)', () => {
+  it("returns defensive copy (mutations don't affect internal state)", () => {
     const conversation = client.createConversation({
       initialMessages: [{ role: 'user', content: 'Original' }],
     })
@@ -433,17 +431,17 @@ describe('conversation.addMessage(role, content)', () => {
     expect(history).toContainEqual({ role: 'user', content: 'Injected' })
   })
 
-  it('accepts \'user\' role', () => {
+  it("accepts 'user' role", () => {
     const conversation = client.createConversation()
     expect(() => conversation.addMessage('user', 'Hello')).not.toThrow()
   })
 
-  it('accepts \'assistant\' role', () => {
+  it("accepts 'assistant' role", () => {
     const conversation = client.createConversation()
     expect(() => conversation.addMessage('assistant', 'Hi')).not.toThrow()
   })
 
-  it('throws ValidationError for \'system\' role', () => {
+  it("throws ValidationError for 'system' role", () => {
     const conversation = client.createConversation()
     expect(() =>
       conversation.addMessage(

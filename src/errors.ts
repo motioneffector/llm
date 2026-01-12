@@ -60,7 +60,7 @@ export class ServerError extends LLMError {
 export class NetworkError extends LLMError {
   constructor(
     message: string,
-    public readonly cause?: Error
+    public override readonly cause?: Error
   ) {
     super(message)
     this.name = 'NetworkError'
@@ -70,7 +70,7 @@ export class NetworkError extends LLMError {
 export class ParseError extends LLMError {
   constructor(
     message: string,
-    public readonly cause?: Error
+    public override readonly cause?: Error
   ) {
     super(message)
     this.name = 'ParseError'

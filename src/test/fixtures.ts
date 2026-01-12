@@ -61,10 +61,7 @@ export function createMockStream(chunks: string[]): ReadableStream {
   })
 }
 
-export function createMockErrorResponse(
-  status: number,
-  message = 'Error message'
-): Response {
+export function createMockErrorResponse(status: number, message = 'Error message'): Response {
   return {
     ok: false,
     status,

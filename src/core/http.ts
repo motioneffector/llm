@@ -11,13 +11,13 @@ interface RequestOptions {
   method: string
   headers: Record<string, string>
   body?: string
-  signal?: AbortSignal
+  signal?: AbortSignal | undefined
 }
 
 interface RetryOptions {
   maxRetries: number
   shouldRetry: boolean
-  signal?: AbortSignal
+  signal?: AbortSignal | undefined
 }
 
 function isRetriableStatus(status: number): boolean {
@@ -117,7 +117,13 @@ export async function fetchWithRetry(
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const response = await fetch(url, { ...options, signal })
+      const fetchOptions: RequestInit = {
+        method: options.method,
+        headers: options.headers,
+        ...(options.body && { body: options.body }),
+        ...(signal && { signal }),
+      }
+      const response = await fetch(url, fetchOptions)
 
       if (!response) {
         throw new Error('fetch returned undefined')
@@ -162,8 +168,7 @@ export async function fetchWithRetry(
           (error instanceof RateLimitError || error instanceof ServerError) &&
           attempt < maxAttempts - 1
         ) {
-          const retryAfter =
-            error instanceof RateLimitError ? error.retryAfter : undefined
+          const retryAfter = error instanceof RateLimitError ? error.retryAfter : undefined
           const delay = getRetryDelay(attempt, retryAfter)
           await sleep(delay, signal)
           lastError = error
@@ -180,10 +185,7 @@ export async function fetchWithRetry(
         continue
       }
 
-      throw new NetworkError(
-        `Network request failed: ${(error as Error).message}`,
-        error as Error
-      )
+      throw new NetworkError(`Network request failed: ${(error as Error).message}`, error as Error)
     }
   }
 

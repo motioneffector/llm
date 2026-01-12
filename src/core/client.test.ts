@@ -23,9 +23,9 @@ describe('createLLMClient(options)', () => {
   })
 
   it('throws ValidationError if apiKey is empty string', () => {
-    expect(() =>
-      createLLMClient({ apiKey: '', model: 'anthropic/claude-sonnet-4' })
-    ).toThrow(ValidationError)
+    expect(() => createLLMClient({ apiKey: '', model: 'anthropic/claude-sonnet-4' })).toThrow(
+      ValidationError
+    )
   })
 
   it('throws ValidationError if model is missing', () => {

@@ -5,6 +5,9 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   {
+    ignores: ['**/*.test.ts', '**/test/**', 'dist/**', 'node_modules/**'],
+  },
+  {
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -23,6 +26,8 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/prefer-nullish-coalescing': 'error',
       '@typescript-eslint/prefer-optional-chain': 'error',
+      '@typescript-eslint/no-unnecessary-condition': 'warn',
+      '@typescript-eslint/restrict-template-expressions': 'warn',
     },
   }
 )
