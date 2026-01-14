@@ -50,6 +50,7 @@
     "build": "tsc && vite build",
     "test": "vitest",
     "test:run": "vitest run",
+    "fuzz:thorough": "FUZZ_THOROUGH=1 vitest run src/fuzz.test.ts --testTimeout=30000",
     "lint": "eslint src",
     "format": "prettier --write src",
     "typecheck": "tsc --noEmit",
