@@ -1369,8 +1369,8 @@ textarea.input {
       <div class="test-runner-header">
         <h2 class="test-runner-title">Test Suite</h2>
         <div class="test-runner-actions">
-          <button class="btn btn-primary" id="run-tests">Run Tests</button>
-          <button class="btn btn-secondary" id="run-fuzz" style="display: none;">Run Fuzz Tests</button>
+          <button class="btn btn-primary" id="run-tests">Run All Tests</button>
+          <button class="btn btn-secondary" id="reset-page">Reset Page</button>
         </div>
       </div>
       <div class="test-runner-content">
@@ -2093,6 +2093,152 @@ const testRunner = {
     this.tests.push({ name, fn });
   },
 
+  async runWithDemos() {
+    if (this.running) return;
+    this.running = true;
+    this.results = [];
+
+    const output = document.getElementById('test-output');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    const runBtn = document.getElementById('run-tests');
+
+    runBtn.disabled = true;
+    output.innerHTML = '<div class="test-output-empty">Running demo exhibits...</div>';
+    progressFill.style.width = '0%';
+    progressFill.className = 'test-progress-fill';
+
+    // Phase 1: Run all demos visually (30% of progress bar)
+    progressText.textContent = 'Phase 1/2: Running demo exhibits...';
+
+    // Run Stream Decoder at accelerated speed
+    output.innerHTML = '<div class="test-item"><span class="test-icon pass">●</span><span class="test-name">Running Stream Decoder demo...</span></div>';
+    progressFill.style.width = '5%';
+    streamDecoder.speed = 20; // Fast but visible
+    document.getElementById('stream-preset').value = 'code';
+    streamDecoder.currentPreset = 'code';
+    const streamPromise = streamDecoder.run();
+    await sleep(800); // Let it start visibly
+    progressFill.style.width = '10%';
+
+    // Run Resilience Lab at accelerated speed
+    output.innerHTML += '<div class="test-item"><span class="test-icon pass">●</span><span class="test-name">Running Resilience Lab demo (rate-limit scenario)...</span></div>';
+    document.getElementById('resilience-accelerated').checked = true;
+    resilienceLab.accelerated = true;
+    document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-scenario="rate-limit"]').classList.add('active');
+    resilienceLab.currentScenario = 'rate-limit';
+    const resiliencePromise = resilienceLab.run();
+    await sleep(500);
+    progressFill.style.width = '15%';
+
+    // Cycle Conversation presets
+    output.innerHTML += '<div class="test-item"><span class="test-icon pass">●</span><span class="test-name">Cycling Conversation State Machine presets...</span></div>';
+    for (const preset of ['coding', 'creative', 'long', 'empty']) {
+      document.getElementById('conv-preset').value = preset;
+      conversationMachine.loadPreset(preset);
+      await sleep(200);
+    }
+    // Add a message to show interaction
+    document.getElementById('conv-input').value = 'How does async/await work?';
+    conversationMachine.updateJson();
+    await sleep(200);
+    conversationMachine.send();
+    progressFill.style.width = '20%';
+
+    // Cycle Token presets
+    output.innerHTML += '<div class="test-item"><span class="test-icon pass">●</span><span class="test-name">Cycling Token Visualizer presets...</span></div>';
+    for (const preset of ['code', 'long', 'unicode', 'pangram']) {
+      document.getElementById('token-preset').value = preset;
+      document.getElementById('token-input').value = PRESETS.token[preset];
+      tokenVisualizer.updateTokens();
+      await sleep(250);
+    }
+    // Click through different models
+    const modelRows = document.querySelectorAll('#model-table tbody tr');
+    for (let i = 0; i < modelRows.length && i < 3; i++) {
+      modelRows[i].click();
+      await sleep(150);
+    }
+    progressFill.style.width = '25%';
+
+    // Wait for running demos to complete
+    output.innerHTML += '<div class="test-item"><span class="test-icon pass">●</span><span class="test-name">Waiting for demos to complete...</span></div>';
+    await Promise.all([streamPromise, resiliencePromise].filter(Boolean));
+    progressFill.style.width = '30%';
+
+    output.innerHTML += '<div class="test-item"><span class="test-icon pass">✓</span><span class="test-name" style="color: var(--accent-green-bright);">All demo exhibits completed successfully</span></div>';
+    await sleep(300);
+
+    // Phase 2: Run actual tests (remaining 70% of progress bar)
+    progressText.textContent = 'Phase 2/2: Running test suite...';
+    output.innerHTML += '<div style="padding: var(--space-sm) var(--space-md); border-top: 1px solid var(--border-muted); margin-top: var(--space-sm); color: var(--text-muted);">Test Suite Results:</div>';
+
+    // Now run the actual tests
+    await this.runTests(30); // Start from 30%
+  },
+
+  async runTests(startProgress = 0) {
+    const output = document.getElementById('test-output');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    const summary = document.getElementById('test-summary');
+    const passedCount = document.getElementById('passed-count');
+    const failedCount = document.getElementById('failed-count');
+    const skippedCount = document.getElementById('skipped-count');
+    const runBtn = document.getElementById('run-tests');
+
+    let passed = 0;
+    let failed = 0;
+    const progressRange = 100 - startProgress;
+
+    for (let i = 0; i < this.tests.length; i++) {
+      const test = this.tests[i];
+      const progress = startProgress + ((i + 1) / this.tests.length) * progressRange;
+
+      progressFill.style.width = `${progress}%`;
+      progressText.textContent = `Running: ${test.name}`;
+
+      try {
+        await test.fn();
+        passed++;
+        this.results.push({ name: test.name, passed: true });
+        output.innerHTML += `
+          <div class="test-item">
+            <span class="test-icon pass">✓</span>
+            <span class="test-name">${escapeHtml(test.name)}</span>
+          </div>
+        `;
+      } catch (e) {
+        failed++;
+        this.results.push({ name: test.name, passed: false, error: e.message });
+        output.innerHTML += `
+          <div class="test-item">
+            <span class="test-icon fail">✗</span>
+            <div>
+              <div class="test-name">${escapeHtml(test.name)}</div>
+              <div class="test-error">${escapeHtml(e.message)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      output.scrollTop = output.scrollHeight;
+      await new Promise(r => setTimeout(r, 20));
+    }
+
+    progressFill.classList.add(failed === 0 ? 'success' : 'failure');
+    progressText.textContent = `Complete: ${passed}/${this.tests.length} tests passed`;
+
+    passedCount.textContent = passed;
+    failedCount.textContent = failed;
+    skippedCount.textContent = 0;
+    summary.classList.remove('hidden');
+
+    runBtn.disabled = false;
+    this.running = false;
+  },
+
   async run() {
     if (this.running) return;
     this.running = true;
@@ -2164,7 +2310,8 @@ const testRunner = {
   }
 };
 
-document.getElementById('run-tests').addEventListener('click', () => testRunner.run());
+document.getElementById('run-tests').addEventListener('click', () => testRunner.runWithDemos());
+document.getElementById('reset-page').addEventListener('click', () => window.location.reload());
 
 // ============================================
 // REGISTER TESTS
