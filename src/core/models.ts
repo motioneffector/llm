@@ -54,5 +54,19 @@ const MODEL_DATABASE: Record<string, ModelInfo> = {
  * ```
  */
 export function getModelInfo(modelId: string): ModelInfo | undefined {
+  // Prevent prototype pollution by rejecting dangerous keys
+  if (
+    modelId === '__proto__' ||
+    modelId === 'constructor' ||
+    modelId === 'prototype'
+  ) {
+    return undefined
+  }
+
+  // Use Object.hasOwn to ensure we only access own properties
+  if (!Object.hasOwn(MODEL_DATABASE, modelId)) {
+    return undefined
+  }
+
   return MODEL_DATABASE[modelId]
 }

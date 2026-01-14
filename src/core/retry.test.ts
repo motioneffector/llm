@@ -327,3 +327,110 @@ describe('Retry and Streaming', () => {
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('Security: DoS prevention via Retry-After header', () => {
+  let client: ReturnType<typeof createLLMClient>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    client = createLLMClient({ apiKey: 'sk-test', model: 'anthropic/claude-sonnet-4' })
+  })
+
+  it('caps retry delay at 30 seconds for malicious Retry-After values', async () => {
+    const startTime = Date.now()
+
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        headers: new Headers({ 'Retry-After': '999999999' }), // ~31.7 years
+        json: async () => ({ error: { message: 'Rate limit exceeded' } }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          id: 'test',
+          model: 'test',
+          choices: [{ message: { content: 'Success' }, finish_reason: 'stop' }],
+          usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+        }),
+      } as Response)
+
+    const response = await client.chat([{ role: 'user', content: 'Hello' }])
+    const elapsed = Date.now() - startTime
+
+    expect(response.content).toBe('Success')
+    // Should complete within reasonable time (30s + margin), not years
+    expect(elapsed).toBeLessThan(35000)
+  }, 40000)
+
+  it('handles negative Retry-After values gracefully', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        headers: new Headers({ 'Retry-After': '-1000' }),
+        json: async () => ({ error: { message: 'Rate limit exceeded' } }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          id: 'test',
+          model: 'test',
+          choices: [{ message: { content: 'Success' }, finish_reason: 'stop' }],
+          usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+        }),
+      } as Response)
+
+    const response = await client.chat([{ role: 'user', content: 'Hello' }])
+    expect(response.content).toBe('Success')
+  }, 10000)
+
+  it('handles non-numeric Retry-After values by falling back to exponential backoff', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        headers: new Headers({ 'Retry-After': 'invalid' }),
+        json: async () => ({ error: { message: 'Rate limit exceeded' } }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          id: 'test',
+          model: 'test',
+          choices: [{ message: { content: 'Success' }, finish_reason: 'stop' }],
+          usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+        }),
+      } as Response)
+
+    const response = await client.chat([{ role: 'user', content: 'Hello' }])
+    expect(response.content).toBe('Success')
+  }, 10000)
+
+  it('handles Infinity in Retry-After by falling back to exponential backoff', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        headers: new Headers({ 'Retry-After': 'Infinity' }),
+        json: async () => ({ error: { message: 'Rate limit exceeded' } }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          id: 'test',
+          model: 'test',
+          choices: [{ message: { content: 'Success' }, finish_reason: 'stop' }],
+          usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+        }),
+      } as Response)
+
+    const response = await client.chat([{ role: 'user', content: 'Hello' }])
+    expect(response.content).toBe('Success')
+  }, 10000)
+})

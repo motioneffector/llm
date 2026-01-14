@@ -25,12 +25,23 @@ function isRetriableStatus(status: number): boolean {
 }
 
 function getRetryDelay(attempt: number, retryAfter?: number): number {
+  const MAX_RETRY_DELAY = 30000 // 30 seconds maximum
+
   if (retryAfter !== undefined) {
-    return retryAfter * 1000
+    // Validate and cap retry delay to prevent DoS from malicious Retry-After headers
+    const retryDelayMs = retryAfter * 1000
+    if (!Number.isFinite(retryDelayMs) || retryDelayMs < 0) {
+      // Invalid value, fall back to exponential backoff
+      const baseDelay = 1000 * Math.pow(2, attempt)
+      const jitter = Math.random() * 200
+      return Math.min(baseDelay + jitter, MAX_RETRY_DELAY)
+    }
+    return Math.min(retryDelayMs, MAX_RETRY_DELAY)
   }
+
   const baseDelay = 1000 * Math.pow(2, attempt)
   const jitter = Math.random() * 200
-  return Math.min(baseDelay + jitter, 30000)
+  return Math.min(baseDelay + jitter, MAX_RETRY_DELAY)
 }
 
 async function sleep(ms: number, signal?: AbortSignal): Promise<void> {

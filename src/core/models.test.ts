@@ -97,3 +97,35 @@ describe('getModelInfo(modelId)', () => {
     }
   })
 })
+
+describe('Security: prototype pollution prevention', () => {
+  it('rejects __proto__ as model identifier', () => {
+    const info = getModelInfo('__proto__')
+    expect(info).toBeUndefined()
+  })
+
+  it('rejects constructor as model identifier', () => {
+    const info = getModelInfo('constructor')
+    expect(info).toBeUndefined()
+  })
+
+  it('rejects prototype as model identifier', () => {
+    const info = getModelInfo('prototype')
+    expect(info).toBeUndefined()
+  })
+
+  it('does not leak prototype properties', () => {
+    // Attempt to access Object.prototype properties
+    const info = getModelInfo('toString')
+    expect(info).toBeUndefined()
+  })
+
+  it('only returns own properties from MODEL_DATABASE', () => {
+    // Valid model should work
+    expect(getModelInfo('anthropic/claude-sonnet-4')).toBeDefined()
+
+    // Inherited properties should not be accessible
+    expect(getModelInfo('hasOwnProperty')).toBeUndefined()
+    expect(getModelInfo('valueOf')).toBeUndefined()
+  })
+})
