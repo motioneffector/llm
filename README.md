@@ -32,19 +32,13 @@ const client = createLLMClient({
   model: 'anthropic/claude-sonnet-4'
 })
 
-// Simple chat completion
+// Send a chat completion request
 const response = await client.chat([
-  { role: 'user', content: 'Explain quantum computing' }
+  { role: 'user', content: 'Explain quantum computing in simple terms' }
 ])
-console.log(response.content)
 
-// Streaming response
-const stream = client.stream([
-  { role: 'user', content: 'Write a haiku' }
-])
-for await (const chunk of stream) {
-  process.stdout.write(chunk)
-}
+console.log(response.content)
+console.log(`Used ${response.usage.totalTokens} tokens in ${response.latency}ms`)
 ```
 
 ## Testing & Validation
