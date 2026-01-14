@@ -5,3 +5,4 @@ coverage/
 .DS_Store
 *.local
 .claude/
+FUZZERS.md
