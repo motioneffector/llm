@@ -31,7 +31,7 @@ import type { Message, ChatOptions, ClientOptions, ConversationOptions } from '.
 
 const THOROUGH_MODE = process.env.FUZZ_THOROUGH === '1'
 const ITERATIONS = THOROUGH_MODE ? Infinity : 200
-const DURATION_MS = THOROUGH_MODE ? 2_000 : undefined // 2s per test = ~2min total for 48 tests
+const DURATION_MS = THOROUGH_MODE ? 10_000 : undefined // 10s per test
 const BASE_SEED = THOROUGH_MODE ? Date.now() : 42
 
 // ============================================
