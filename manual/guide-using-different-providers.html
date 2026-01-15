@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Using Different Providers - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Using Different Providers</h1>
+<p>Connect to LLM providers other than OpenRouter—OpenAI direct, Anthropic direct, or self-hosted endpoints. This guide covers custom base URLs and provider-specific configuration.</p>
+<h2>Prerequisites</h2>
+<p>Before starting, you should:</p>
+<ul>
+<li>Know the basics of <a href="concept-client.html">creating a client</a></li>
+<li>Have API credentials for your target provider</li>
+</ul>
+<h2>Overview</h2>
+<p>We&#39;ll use different providers by:</p>
+<ol>
+<li>Setting a custom <code>baseUrl</code></li>
+<li>Using provider-specific model names</li>
+<li>Adjusting headers if needed</li>
+</ol>
+<h2>Step 1: Set the Base URL</h2>
+<p>Pass <code>baseUrl</code> when creating the client to point to a different API:</p>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENAI_KEY!,
+  model: &#39;gpt-4o&#39;,
+  baseUrl: &#39;https://api.openai.com/v1&#39;
+})
+</code></pre>
+<p>The client appends <code>/chat/completions</code> to the base URL, so provide just the base path.</p>
+<h2>Step 2: Use Provider Model Names</h2>
+<p>Each provider has its own model naming:</p>
+<pre><code class="language-typescript">// OpenAI
+const openai = createLLMClient({
+  apiKey: process.env.OPENAI_KEY!,
+  model: &#39;gpt-4o&#39;,  // Not &#39;openai/gpt-4o&#39;
+  baseUrl: &#39;https://api.openai.com/v1&#39;
+})
+
+// Anthropic
+const anthropic = createLLMClient({
+  apiKey: process.env.ANTHROPIC_KEY!,
+  model: &#39;claude-sonnet-4-20250514&#39;,  // Anthropic&#39;s format
+  baseUrl: &#39;https://api.anthropic.com/v1&#39;
+})
+</code></pre>
+<h2>Step 3: Handle Provider Differences</h2>
+<p>OpenRouter headers (<code>HTTP-Referer</code>, <code>X-Title</code>) are only sent when the URL contains &quot;openrouter&quot;. Other providers don&#39;t need them.</p>
+<p>The library handles standard OpenAI-compatible APIs. Providers with different formats may need additional configuration or may not be compatible.</p>
+<h2>Complete Example</h2>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+// OpenAI Direct
+const openai = createLLMClient({
+  apiKey: process.env.OPENAI_KEY!,
+  model: &#39;gpt-4o&#39;,
+  baseUrl: &#39;https://api.openai.com/v1&#39;
+})
+
+const response = await openai.chat([
+  { role: &#39;user&#39;, content: &#39;Hello from OpenAI!&#39; }
+])
+
+console.log(response.content)
+</code></pre>
+<h2>Variations</h2>
+<h3>OpenAI</h3>
+<pre><code class="language-typescript">const client = createLLMClient({
+  apiKey: process.env.OPENAI_KEY!,
+  model: &#39;gpt-4o&#39;,
+  baseUrl: &#39;https://api.openai.com/v1&#39;
+})
+</code></pre>
+<p>Available models: <code>gpt-4o</code>, <code>gpt-4-turbo</code>, <code>gpt-3.5-turbo</code>, etc.</p>
+<h3>Azure OpenAI</h3>
+<p>Azure uses a different URL format with deployments:</p>
+<pre><code class="language-typescript">const client = createLLMClient({
+  apiKey: process.env.AZURE_OPENAI_KEY!,
+  model: &#39;gpt-4&#39;,  // Deployment name
+  baseUrl: &#39;https://YOUR-RESOURCE.openai.azure.com/openai/deployments/YOUR-DEPLOYMENT&#39;
+})
+</code></pre>
+<p>Note: Azure may require additional headers. Check Azure documentation for current requirements.</p>
+<h3>Local Models (Ollama, LM Studio)</h3>
+<p>Connect to locally-running models:</p>
+<pre><code class="language-typescript">// Ollama
+const ollama = createLLMClient({
+  apiKey: &#39;ollama&#39;,  // Ollama doesn&#39;t require a key
+  model: &#39;llama2&#39;,
+  baseUrl: &#39;http://localhost:11434/v1&#39;
+})
+
+// LM Studio
+const lmstudio = createLLMClient({
+  apiKey: &#39;lm-studio&#39;,
+  model: &#39;local-model&#39;,
+  baseUrl: &#39;http://localhost:1234/v1&#39;
+})
+</code></pre>
+<h3>Together.ai</h3>
+<pre><code class="language-typescript">const client = createLLMClient({
+  apiKey: process.env.TOGETHER_KEY!,
+  model: &#39;meta-llama/Llama-3-70b-chat-hf&#39;,
+  baseUrl: &#39;https://api.together.xyz/v1&#39;
+})
+</code></pre>
+<h3>Groq</h3>
+<pre><code class="language-typescript">const client = createLLMClient({
+  apiKey: process.env.GROQ_KEY!,
+  model: &#39;llama3-70b-8192&#39;,
+  baseUrl: &#39;https://api.groq.com/openai/v1&#39;
+})
+</code></pre>
+<h3>Multiple Providers in One App</h3>
+<p>Create separate clients for different providers:</p>
+<pre><code class="language-typescript">const openai = createLLMClient({
+  apiKey: process.env.OPENAI_KEY!,
+  model: &#39;gpt-4o&#39;,
+  baseUrl: &#39;https://api.openai.com/v1&#39;
+})
+
+const anthropic = createLLMClient({
+  apiKey: process.env.ANTHROPIC_KEY!,
+  model: &#39;claude-sonnet-4-20250514&#39;,
+  baseUrl: &#39;https://api.anthropic.com/v1&#39;
+})
+
+// Use the appropriate client
+const response = await openai.chat(messages)
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>404 Not Found</h3>
+<p><strong>Symptom:</strong> Request returns 404.</p>
+<p><strong>Cause:</strong> Wrong base URL or model name.</p>
+<p><strong>Solution:</strong> Check the provider&#39;s documentation for the correct endpoint. The library appends <code>/chat/completions</code>, so don&#39;t include that in the base URL.</p>
+<h3>Authentication Failed</h3>
+<p><strong>Symptom:</strong> 401 or 403 error.</p>
+<p><strong>Cause:</strong> Wrong API key or key format.</p>
+<p><strong>Solution:</strong> Verify the key is for the correct provider. Some providers use different key formats (Bearer token vs API key header).</p>
+<h3>Unsupported Response Format</h3>
+<p><strong>Symptom:</strong> Parse errors or missing content.</p>
+<p><strong>Cause:</strong> Provider uses non-standard response format.</p>
+<p><strong>Solution:</strong> The library expects OpenAI-compatible responses. Providers with different formats may not work without modification.</p>
+<h3>Headers Not Sent</h3>
+<p><strong>Symptom:</strong> Provider rejects requests for missing headers.</p>
+<p><strong>Cause:</strong> Custom headers needed for this provider.</p>
+<p><strong>Solution:</strong> Currently the library doesn&#39;t support custom headers. Consider using OpenRouter as a proxy instead, which handles provider-specific requirements.</p>
+<h2>See Also</h2>
+<ul>
+<li><strong><a href="concept-client.html">Client</a></strong> - Client configuration options</li>
+<li><strong><a href="api-client.html">Client API</a></strong> - <code>baseUrl</code> option reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

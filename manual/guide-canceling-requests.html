@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canceling Requests - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Canceling Requests</h1>
+<p>Cancel in-flight requests when users navigate away, timeouts occur, or you need to stop generation early. This guide covers AbortController usage for both regular and streaming requests.</p>
+<h2>Prerequisites</h2>
+<p>Before starting, you should:</p>
+<ul>
+<li>Know the basics of <a href="guide-sending-messages.html">sending messages</a></li>
+<li>Understand <a href="https://developer.mozilla.org/en-US/docs/Web/API/AbortController">AbortController</a></li>
+</ul>
+<h2>Overview</h2>
+<p>We&#39;ll cancel requests by:</p>
+<ol>
+<li>Creating an AbortController</li>
+<li>Passing its signal to the request</li>
+<li>Calling abort() to cancel</li>
+<li>Handling the AbortError</li>
+</ol>
+<h2>Step 1: Create an AbortController</h2>
+<p>AbortController provides a signal you can pass to requests and an abort() method to cancel them.</p>
+<pre><code class="language-typescript">const controller = new AbortController()
+</code></pre>
+<h2>Step 2: Pass the Signal</h2>
+<p>Include the signal in your request options:</p>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+const controller = new AbortController()
+
+const response = await client.chat(
+  [{ role: &#39;user&#39;, content: &#39;Tell me a long story&#39; }],
+  { signal: controller.signal }
+)
+</code></pre>
+<h2>Step 3: Cancel When Needed</h2>
+<p>Call <code>abort()</code> to cancel the request:</p>
+<pre><code class="language-typescript">// Cancel after 5 seconds
+setTimeout(() =&gt; controller.abort(), 5000)
+</code></pre>
+<h2>Step 4: Handle the Error</h2>
+<p>Canceled requests throw a <code>DOMException</code> with name <code>&#39;AbortError&#39;</code>:</p>
+<pre><code class="language-typescript">try {
+  const response = await client.chat(messages, { signal: controller.signal })
+  console.log(response.content)
+} catch (error) {
+  if (error instanceof DOMException &amp;&amp; error.name === &#39;AbortError&#39;) {
+    console.log(&#39;Request was canceled&#39;)
+  } else {
+    throw error
+  }
+}
+</code></pre>
+<h2>Complete Example</h2>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+const controller = new AbortController()
+
+// Cancel after 5 seconds
+const timeout = setTimeout(() =&gt; {
+  console.log(&#39;Timeout reached, canceling...&#39;)
+  controller.abort()
+}, 5000)
+
+try {
+  const response = await client.chat(
+    [{ role: &#39;user&#39;, content: &#39;Write a very long essay about TypeScript&#39; }],
+    { signal: controller.signal }
+  )
+  clearTimeout(timeout)
+  console.log(response.content)
+} catch (error) {
+  clearTimeout(timeout)
+  if (error instanceof DOMException &amp;&amp; error.name === &#39;AbortError&#39;) {
+    console.log(&#39;Request canceled due to timeout&#39;)
+  } else {
+    throw error
+  }
+}
+</code></pre>
+<h2>Variations</h2>
+<h3>Canceling Streams</h3>
+<p>Streams work the same way but you can cancel mid-generation:</p>
+<pre><code class="language-typescript">const controller = new AbortController()
+
+// Cancel after 2 seconds
+setTimeout(() =&gt; controller.abort(), 2000)
+
+const stream = client.stream(
+  [{ role: &#39;user&#39;, content: &#39;Count from 1 to 1000&#39; }],
+  { signal: controller.signal }
+)
+
+try {
+  for await (const chunk of stream) {
+    process.stdout.write(chunk)
+  }
+} catch (error) {
+  if (error instanceof DOMException &amp;&amp; error.name === &#39;AbortError&#39;) {
+    console.log(&#39;\n[Stream canceled]&#39;)
+  } else {
+    throw error
+  }
+}
+</code></pre>
+<h3>User-Initiated Cancellation</h3>
+<p>Wire up a cancel button:</p>
+<pre><code class="language-typescript">const cancelButton = document.getElementById(&#39;cancel&#39;)!
+const controller = new AbortController()
+
+cancelButton.addEventListener(&#39;click&#39;, () =&gt; {
+  controller.abort()
+})
+
+try {
+  const response = await client.chat(messages, { signal: controller.signal })
+  showResult(response.content)
+} catch (error) {
+  if (error instanceof DOMException &amp;&amp; error.name === &#39;AbortError&#39;) {
+    showMessage(&#39;Canceled by user&#39;)
+  } else {
+    showError(error)
+  }
+}
+</code></pre>
+<h3>Timeout Wrapper Function</h3>
+<p>Create a reusable timeout wrapper:</p>
+<pre><code class="language-typescript">import type { Message, ChatOptions, ChatResponse } from &#39;@motioneffector/llm&#39;
+
+async function chatWithTimeout(
+  client: ReturnType&lt;typeof createLLMClient&gt;,
+  messages: Message[],
+  timeoutMs: number,
+  options?: ChatOptions
+): Promise&lt;ChatResponse&gt; {
+  const controller = new AbortController()
+  const timeout = setTimeout(() =&gt; controller.abort(), timeoutMs)
+
+  try {
+    return await client.chat(messages, {
+      ...options,
+      signal: controller.signal
+    })
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+// Usage
+const response = await chatWithTimeout(client, messages, 10000)
+</code></pre>
+<h3>Canceling Conversation Requests</h3>
+<p>Conversations also accept the signal:</p>
+<pre><code class="language-typescript">const conversation = client.createConversation()
+const controller = new AbortController()
+
+setTimeout(() =&gt; controller.abort(), 5000)
+
+try {
+  const reply = await conversation.send(&#39;Write a long story&#39;, {
+    signal: controller.signal
+  })
+  console.log(reply)
+} catch (error) {
+  if (error instanceof DOMException &amp;&amp; error.name === &#39;AbortError&#39;) {
+    console.log(&#39;Conversation request canceled&#39;)
+  } else {
+    throw error
+  }
+}
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>Abort Doesn&#39;t Stop Immediately</h3>
+<p><strong>Symptom:</strong> Request continues briefly after abort().</p>
+<p><strong>Cause:</strong> Abort signals are checked at specific points; active network operations complete their current chunk.</p>
+<p><strong>Solution:</strong> This is normal behavior. The request will stop at the next check point.</p>
+<h3>Already Aborted Error</h3>
+<p><strong>Symptom:</strong> Error thrown before request starts.</p>
+<p><strong>Cause:</strong> Using an already-aborted controller.</p>
+<p><strong>Solution:</strong> Create a fresh AbortController for each request:</p>
+<pre><code class="language-typescript">// Wrong - reusing aborted controller
+controller.abort()
+await client.chat(messages, { signal: controller.signal }) // Throws immediately
+
+// Right - new controller
+const newController = new AbortController()
+await client.chat(messages, { signal: newController.signal })
+</code></pre>
+<h3>Memory Leaks with Timeouts</h3>
+<p><strong>Symptom:</strong> Timeouts keep running after completion.</p>
+<p><strong>Cause:</strong> Not clearing the timeout when request completes normally.</p>
+<p><strong>Solution:</strong> Always clear timeouts in finally block:</p>
+<pre><code class="language-typescript">const timeout = setTimeout(() =&gt; controller.abort(), 5000)
+try {
+  await client.chat(messages, { signal: controller.signal })
+} finally {
+  clearTimeout(timeout)
+}
+</code></pre>
+<h2>See Also</h2>
+<ul>
+<li><strong><a href="concept-streaming.html">Streaming</a></strong> - Canceling streams mid-generation</li>
+<li><strong><a href="guide-streaming-responses.html">Streaming Responses</a></strong> - Streaming with abort examples</li>
+<li><strong><a href="api-client.html">Client API</a></strong> - Signal option documentation</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

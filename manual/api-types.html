@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Types - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Types</h1>
+<p>TypeScript interfaces used throughout the library.</p>
+<hr>
+<h2><code>Message</code></h2>
+<p>A single message in a conversation.</p>
+<pre><code class="language-typescript">interface Message {
+  role: &#39;system&#39; | &#39;user&#39; | &#39;assistant&#39;
+  content: string
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>role</code></td>
+<td><code>&#39;system&#39; | &#39;user&#39; | &#39;assistant&#39;</code></td>
+<td>The role of the message sender</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td><code>string</code></td>
+<td>The text content of the message</td>
+</tr>
+</tbody></table>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const messages: Message[] = [
+  { role: &#39;system&#39;, content: &#39;Be helpful.&#39; },
+  { role: &#39;user&#39;, content: &#39;Hello!&#39; },
+  { role: &#39;assistant&#39;, content: &#39;Hi there!&#39; }
+]
+</code></pre>
+<hr>
+<h2><code>ChatResponse</code></h2>
+<p>Response from a chat completion request.</p>
+<pre><code class="language-typescript">interface ChatResponse {
+  content: string
+  usage: TokenUsage
+  model: string
+  id: string
+  finishReason: &#39;stop&#39; | &#39;length&#39; | &#39;content_filter&#39; | null
+  latency: number
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>content</code></td>
+<td><code>string</code></td>
+<td>The generated text response</td>
+</tr>
+<tr>
+<td><code>usage</code></td>
+<td><code>TokenUsage</code></td>
+<td>Token usage statistics</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td><code>string</code></td>
+<td>The model that generated the response</td>
+</tr>
+<tr>
+<td><code>id</code></td>
+<td><code>string</code></td>
+<td>Unique identifier for this completion</td>
+</tr>
+<tr>
+<td><code>finishReason</code></td>
+<td><code>&#39;stop&#39; | &#39;length&#39; | &#39;content_filter&#39; | null</code></td>
+<td>Why generation stopped</td>
+</tr>
+<tr>
+<td><code>latency</code></td>
+<td><code>number</code></td>
+<td>Request latency in milliseconds</td>
+</tr>
+</tbody></table>
+<p><strong>Finish Reasons:</strong></p>
+<ul>
+<li><code>&#39;stop&#39;</code> — Natural completion</li>
+<li><code>&#39;length&#39;</code> — Hit max tokens limit</li>
+<li><code>&#39;content_filter&#39;</code> — Response was filtered</li>
+<li><code>null</code> — Unknown or not provided</li>
+</ul>
+<hr>
+<h2><code>TokenUsage</code></h2>
+<p>Token usage statistics for a request.</p>
+<pre><code class="language-typescript">interface TokenUsage {
+  promptTokens: number
+  completionTokens: number
+  totalTokens: number
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>promptTokens</code></td>
+<td><code>number</code></td>
+<td>Tokens in the prompt/input</td>
+</tr>
+<tr>
+<td><code>completionTokens</code></td>
+<td><code>number</code></td>
+<td>Tokens in the response/output</td>
+</tr>
+<tr>
+<td><code>totalTokens</code></td>
+<td><code>number</code></td>
+<td>Total tokens used</td>
+</tr>
+</tbody></table>
+<hr>
+<h2><code>GenerationParams</code></h2>
+<p>Parameters for controlling text generation.</p>
+<pre><code class="language-typescript">interface GenerationParams {
+  temperature?: number
+  maxTokens?: number
+  topP?: number
+  stop?: string[]
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>temperature</code></td>
+<td><code>number</code></td>
+<td>Sampling temperature (0-2). Higher = more random</td>
+</tr>
+<tr>
+<td><code>maxTokens</code></td>
+<td><code>number</code></td>
+<td>Maximum tokens to generate</td>
+</tr>
+<tr>
+<td><code>topP</code></td>
+<td><code>number</code></td>
+<td>Nucleus sampling threshold (0-1)</td>
+</tr>
+<tr>
+<td><code>stop</code></td>
+<td><code>string[]</code></td>
+<td>Sequences that stop generation</td>
+</tr>
+</tbody></table>
+<hr>
+<h2><code>ClientOptions</code></h2>
+<p>Configuration for creating an LLM client.</p>
+<pre><code class="language-typescript">interface ClientOptions {
+  apiKey: string
+  model: string
+  baseUrl?: string
+  defaultParams?: GenerationParams
+  referer?: string
+  title?: string
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>apiKey</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>API key for authentication</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>Model identifier (e.g., <code>&#39;anthropic/claude-sonnet-4&#39;</code>)</td>
+</tr>
+<tr>
+<td><code>baseUrl</code></td>
+<td><code>string</code></td>
+<td>No</td>
+<td>API endpoint. Default: OpenRouter</td>
+</tr>
+<tr>
+<td><code>defaultParams</code></td>
+<td><code>GenerationParams</code></td>
+<td>No</td>
+<td>Default generation parameters</td>
+</tr>
+<tr>
+<td><code>referer</code></td>
+<td><code>string</code></td>
+<td>No</td>
+<td>HTTP-Referer header for OpenRouter</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td><code>string</code></td>
+<td>No</td>
+<td>X-Title header for OpenRouter</td>
+</tr>
+</tbody></table>
+<hr>
+<h2><code>ChatOptions</code></h2>
+<p>Options for a single chat request.</p>
+<pre><code class="language-typescript">interface ChatOptions extends GenerationParams {
+  model?: string
+  signal?: AbortSignal
+  retry?: boolean
+  maxRetries?: number
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>model</code></td>
+<td><code>string</code></td>
+<td>Override model for this request</td>
+</tr>
+<tr>
+<td><code>signal</code></td>
+<td><code>AbortSignal</code></td>
+<td>Signal to cancel the request</td>
+</tr>
+<tr>
+<td><code>retry</code></td>
+<td><code>boolean</code></td>
+<td>Enable retries. Default: <code>true</code></td>
+</tr>
+<tr>
+<td><code>maxRetries</code></td>
+<td><code>number</code></td>
+<td>Max retry attempts. Default: <code>3</code></td>
+</tr>
+<tr>
+<td><code>temperature</code></td>
+<td><code>number</code></td>
+<td>Sampling temperature (0-2)</td>
+</tr>
+<tr>
+<td><code>maxTokens</code></td>
+<td><code>number</code></td>
+<td>Maximum tokens to generate</td>
+</tr>
+<tr>
+<td><code>topP</code></td>
+<td><code>number</code></td>
+<td>Nucleus sampling threshold</td>
+</tr>
+<tr>
+<td><code>stop</code></td>
+<td><code>string[]</code></td>
+<td>Stop sequences</td>
+</tr>
+</tbody></table>
+<hr>
+<h2><code>ConversationOptions</code></h2>
+<p>Options for creating a conversation.</p>
+<pre><code class="language-typescript">interface ConversationOptions {
+  system?: string
+  initialMessages?: Message[]
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>system</code></td>
+<td><code>string</code></td>
+<td>System prompt to guide model behavior</td>
+</tr>
+<tr>
+<td><code>initialMessages</code></td>
+<td><code>Message[]</code></td>
+<td>Pre-populated message history</td>
+</tr>
+</tbody></table>
+<hr>
+<h2><code>ModelInfo</code></h2>
+<p>Information about a model&#39;s capabilities and pricing.</p>
+<pre><code class="language-typescript">interface ModelInfo {
+  contextLength: number
+  pricing: {
+    prompt: number
+    completion: number
+  }
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>contextLength</code></td>
+<td><code>number</code></td>
+<td>Maximum tokens the model can process</td>
+</tr>
+<tr>
+<td><code>pricing.prompt</code></td>
+<td><code>number</code></td>
+<td>Cost per million prompt tokens (USD)</td>
+</tr>
+<tr>
+<td><code>pricing.completion</code></td>
+<td><code>number</code></td>
+<td>Cost per million completion tokens (USD)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2><code>LLMClient</code></h2>
+<p>The main client interface.</p>
+<pre><code class="language-typescript">interface LLMClient {
+  chat(messages: Message[], options?: ChatOptions): Promise&lt;ChatResponse&gt;
+  stream(messages: Message[], options?: ChatOptions): AsyncIterable&lt;string&gt;
+  createConversation(options?: ConversationOptions): Conversation
+  getModel(): string
+  setModel(model: string): void
+  estimateChat(messages: Message[]): { prompt: number; available: number }
+}
+</code></pre>
+<hr>
+<h2><code>Conversation</code></h2>
+<p>A stateful conversation interface.</p>
+<pre><code class="language-typescript">interface Conversation {
+  send(content: string, options?: ChatOptions): Promise&lt;string&gt;
+  sendStream(content: string, options?: ChatOptions): AsyncIterable&lt;string&gt;
+  history: Message[]
+  addMessage(role: &#39;user&#39; | &#39;assistant&#39;, content: string): void
+  clear(): void
+  clearAll(): void
+}
+</code></pre>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

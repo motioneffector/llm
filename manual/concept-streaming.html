@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streaming - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Streaming</h1>
+<p>Streaming delivers LLM responses in real-time as they&#39;re generated, rather than waiting for the complete response. You see text appear word by word, creating a more responsive experience.</p>
+<h2>How It Works</h2>
+<p>With regular <code>chat()</code>, you wait for the model to generate the entire response before seeing anything. With <code>stream()</code>, text chunks arrive as they&#39;re generated:</p>
+<pre><code>Regular:     [wait 3 seconds] ──────────────► &quot;The complete response...&quot;
+Streaming:   &quot;The&quot; ► &quot;complete&quot; ► &quot;response&quot; ► &quot;...&quot; (appears progressively)
+</code></pre>
+<p>The stream is an async iterable. You iterate over it with <code>for await...of</code>, and each iteration yields a small chunk of text (usually a few words or a partial sentence).</p>
+<pre><code class="language-typescript">const stream = client.stream([{ role: &#39;user&#39;, content: &#39;Tell me a story&#39; }])
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk)  // Display immediately
+}
+</code></pre>
+<h2>Basic Usage</h2>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+const stream = client.stream([
+  { role: &#39;user&#39;, content: &#39;Write a haiku about TypeScript&#39; }
+])
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk)
+}
+
+console.log() // Newline at the end
+</code></pre>
+<p>Each chunk is a string fragment. Write them directly to output without newlines between chunks.</p>
+<h2>Key Points</h2>
+<ul>
+<li><strong>Returns <code>AsyncIterable&lt;string&gt;</code></strong> - Use <code>for await...of</code> to consume chunks.</li>
+<li><strong>Chunks are partial text</strong> - Each chunk might be a word, punctuation, or partial word. Just concatenate them.</li>
+<li><strong>No automatic retries</strong> - Streaming requests don&#39;t retry on failure because retrying would duplicate output.</li>
+<li><strong>Use AbortController to cancel</strong> - Pass a signal to stop the stream mid-generation.</li>
+<li><strong>Same options as chat</strong> - Temperature, maxTokens, model override all work the same.</li>
+</ul>
+<h2>Examples</h2>
+<h3>Collecting Full Response While Streaming</h3>
+<p>Display chunks and build the complete response:</p>
+<pre><code class="language-typescript">const stream = client.stream([
+  { role: &#39;user&#39;, content: &#39;Explain async/await&#39; }
+])
+
+let fullResponse = &#39;&#39;
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk)
+  fullResponse += chunk
+}
+
+console.log(`\n\nTotal length: ${fullResponse.length}`)
+</code></pre>
+<h3>Canceling a Stream</h3>
+<p>Stop generation early with AbortController:</p>
+<pre><code class="language-typescript">const controller = new AbortController()
+
+// Cancel after 5 seconds
+setTimeout(() =&gt; controller.abort(), 5000)
+
+const stream = client.stream(
+  [{ role: &#39;user&#39;, content: &#39;Count to 1000&#39; }],
+  { signal: controller.signal }
+)
+
+try {
+  for await (const chunk of stream) {
+    process.stdout.write(chunk)
+  }
+} catch (error) {
+  if (error instanceof DOMException &amp;&amp; error.name === &#39;AbortError&#39;) {
+    console.log(&#39;\n[Canceled]&#39;)
+  } else {
+    throw error
+  }
+}
+</code></pre>
+<h3>With Custom Parameters</h3>
+<p>All generation options work with streaming:</p>
+<pre><code class="language-typescript">const stream = client.stream(
+  [{ role: &#39;user&#39;, content: &#39;Write a poem&#39; }],
+  {
+    temperature: 0.9,
+    maxTokens: 200,
+    model: &#39;openai/gpt-4o&#39;
+  }
+)
+</code></pre>
+<h2>Related</h2>
+<ul>
+<li><strong><a href="concept-client.html">Client</a></strong> - The stream method is on the client</li>
+<li><strong><a href="guide-streaming-responses.html">Streaming Responses</a></strong> - Step-by-step guide</li>
+<li><strong><a href="guide-canceling-requests.html">Canceling Requests</a></strong> - How to abort streams</li>
+<li><strong><a href="api-client.html">Client API</a></strong> - <code>stream()</code> method reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
