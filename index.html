@@ -4,1709 +4,269 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>@motioneffector/llm - Demo</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #fafafa;
-      color: #333;
-    }
-    h1 { color: #1a1a2e; margin-bottom: 10px; }
-    h2 { color: #16213e; margin-top: 0; }
-    .subtitle { color: #666; margin-bottom: 20px; }
-    section {
-      margin: 20px 0;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: white;
-    }
-    .test-pass { color: #2e7d32; }
-    .test-fail { color: #c62828; font-weight: bold; }
-    .test-skip { color: #f57c00; }
-    .test-output {
-      background: #1a1a2e;
-      color: #e0e0e0;
-      padding: 15px;
-      font-family: 'Monaco', 'Menlo', monospace;
-      font-size: 13px;
-      white-space: pre-wrap;
-      max-height: 500px;
-      overflow-y: auto;
-      border-radius: 6px;
-    }
-    .test-output .test-pass { color: #81c784; }
-    .test-output .test-fail { color: #ef5350; }
-    .test-output .test-skip { color: #ffb74d; }
-    button {
-      padding: 10px 20px;
-      margin: 4px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-    button:hover { opacity: 0.9; transform: translateY(-1px); }
-    button:active { transform: translateY(0); }
-    .run-all {
-      background: #4CAF50;
-      color: white;
-      font-size: 16px;
-      padding: 14px 28px;
-      font-weight: 600;
-    }
-    .run-unit { background: #2196F3; color: white; }
-    .run-live { background: #9c27b0; color: white; }
-    .clear-btn { background: #757575; color: white; }
-    .summary { font-size: 18px; font-weight: bold; margin-top: 15px; }
-
-    .api-key-section {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
-    .api-key-section label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-    .api-key-section input {
-      width: 100%;
-      max-width: 500px;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      font-family: monospace;
-    }
-    .api-key-section small {
-      display: block;
-      margin-top: 8px;
-      opacity: 0.9;
-    }
-
-    .interactive-section input[type="text"],
-    .interactive-section textarea,
-    .interactive-section select {
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      width: 100%;
-      max-width: 400px;
-    }
-    .interactive-section textarea {
-      max-width: 100%;
-      min-height: 100px;
-      font-family: inherit;
-    }
-    .interactive-section label {
-      display: block;
-      margin: 10px 0 5px;
-      font-weight: 600;
-      color: #444;
-    }
-    .output-area {
-      background: #f5f5f5;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 15px;
-      margin-top: 15px;
-      min-height: 100px;
-      white-space: pre-wrap;
-      font-family: monospace;
-      font-size: 13px;
-    }
-    .stream-output {
-      background: #1a1a2e;
-      color: #4fc3f7;
-      min-height: 150px;
-    }
-    .error-output { color: #c62828; background: #ffebee; }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    @media (max-width: 768px) {
-      .grid-2 { grid-template-columns: 1fr; }
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      margin-left: 8px;
-    }
-    .badge-unit { background: #e3f2fd; color: #1565c0; }
-    .badge-live { background: #f3e5f5; color: #7b1fa2; }
-
-    .info-box {
-      background: #e3f2fd;
-      border-left: 4px solid #2196F3;
-      padding: 12px 15px;
-      margin: 15px 0;
-      border-radius: 0 6px 6px 0;
-    }
-    .warning-box {
-      background: #fff3e0;
-      border-left: 4px solid #ff9800;
-      padding: 12px 15px;
-      margin: 15px 0;
-      border-radius: 0 6px 6px 0;
-    }
-  </style>
+  <link rel="stylesheet" href="demo-files/demo.css">
 </head>
 <body>
-  <h1>@motioneffector/llm Demo</h1>
-  <p class="subtitle">TypeScript client for LLM APIs with OpenRouter support, streaming, and conversation management</p>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">TypeScript client for LLM APIs with streaming, conversations, and automatic retries</p>
+      <nav class="header-links">
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link" target="_blank">
+          📦 npm
+        </a>
+        <a href="https://github.com/motioneffector/llm" class="header-link" target="_blank">
+          💻 GitHub
+        </a>
+        <a href="https://github.com/motioneffector/llm/wiki" class="header-link" target="_blank">
+          📖 Manual
+        </a>
+        <span class="simulated-badge">🔶 SIMULATED</span>
+      </nav>
+    </header>
 
-  <section id="test-runner">
-    <h2>Automated Tests</h2>
-
-    <div class="api-key-section">
-      <label for="api-key">OpenRouter API Key (optional for live tests)</label>
-      <input type="password" id="api-key" placeholder="sk-or-v1-..." autocomplete="off">
-      <small>Unit tests run without an API key. Live API tests require a valid OpenRouter key from <a href="https://openrouter.ai/keys" target="_blank" style="color: #fff">openrouter.ai/keys</a></small>
-    </div>
-
-    <div>
-      <button class="run-all" onclick="runAllTests()">Run All Tests</button>
-      <button class="run-unit" onclick="runUnitTests()">Run Unit Tests Only</button>
-      <button class="run-live" onclick="runLiveTests()">Run Live API Tests</button>
-      <button class="clear-btn" onclick="clearResults()">Clear Results</button>
-    </div>
-
-    <div class="summary" id="summary"></div>
-    <div class="test-output" id="test-output">Click "Run All Tests" to start...</div>
-  </section>
-
-  <section class="interactive-section">
-    <h2>Interactive: Chat Completion</h2>
-    <p>Test the chat API with your own prompts. Requires an API key above.</p>
-
-    <div class="grid-2">
-      <div>
-        <label for="chat-model">Model</label>
-        <select id="chat-model">
-          <option value="anthropic/claude-sonnet-4">anthropic/claude-sonnet-4</option>
-          <option value="openai/gpt-4o">openai/gpt-4o</option>
-          <option value="openai/gpt-4o-mini">openai/gpt-4o-mini</option>
-          <option value="meta-llama/llama-3.1-405b">meta-llama/llama-3.1-405b</option>
-        </select>
-
-        <label for="chat-prompt">Your Message</label>
-        <textarea id="chat-prompt" placeholder="Enter your message...">What is 2 + 2? Reply with just the number.</textarea>
-
-        <label for="chat-temp">Temperature (0-2)</label>
-        <input type="number" id="chat-temp" value="0.7" min="0" max="2" step="0.1" style="max-width: 100px;">
-
-        <div style="margin-top: 15px;">
-          <button onclick="runChat()" style="background: #4CAF50; color: white;">Send Chat</button>
-          <button onclick="runStreamChat()" style="background: #2196F3; color: white;">Stream Response</button>
+    <main>
+      <!-- Test Runner (FIRST) -->
+      <section class="test-runner" id="test-runner">
+        <div class="test-runner-header">
+          <h2 class="test-runner-title">Test Runner</h2>
         </div>
-      </div>
-      <div>
-        <label>Response</label>
-        <div class="output-area stream-output" id="chat-output">Response will appear here...</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="interactive-section">
-    <h2>Interactive: Conversation</h2>
-    <p>Test multi-turn conversations with automatic history management.</p>
-
-    <div class="grid-2">
-      <div>
-        <label for="conv-system">System Prompt (optional)</label>
-        <textarea id="conv-system" placeholder="You are a helpful assistant..." style="min-height: 60px;">You are a concise assistant. Keep responses under 50 words.</textarea>
-
-        <label for="conv-message">Your Message</label>
-        <input type="text" id="conv-message" placeholder="Type a message..." value="Hi! What's your name?">
-
-        <div style="margin-top: 15px;">
-          <button onclick="sendConversation()" style="background: #9c27b0; color: white;">Send</button>
-          <button onclick="streamConversation()" style="background: #673ab7; color: white;">Stream</button>
-          <button onclick="clearConversation()" style="background: #757575; color: white;">Clear History</button>
-          <button onclick="newConversation()" style="background: #ff5722; color: white;">New Conversation</button>
+        <div class="test-runner-content">
+          <!-- Control bar: progress bar + buttons, above output console -->
+          <div class="test-control-bar">
+            <div class="test-progress">
+              <div class="test-progress-bar">
+                <div class="test-progress-fill" id="progress-fill"></div>
+              </div>
+              <div class="test-progress-text" id="progress-text">Ready</div>
+            </div>
+            <div class="test-runner-actions">
+              <button class="btn btn-primary" id="run-all-tests">
+                <span class="btn-icon">▶</span>
+                <span>Run All Tests</span>
+              </button>
+              <button class="btn btn-secondary" id="reset-page">
+                <span class="btn-icon">↻</span>
+                <span>Reset Page</span>
+              </button>
+            </div>
+          </div>
+          <!-- Output console below the control bar -->
+          <div class="test-output" id="test-output">
+            <div class="test-output-placeholder">Click "Run All Tests" to execute the test suite and see a live demonstration</div>
+          </div>
+          <div class="test-summary hidden" id="test-summary"></div>
         </div>
-      </div>
-      <div>
-        <label>Conversation History</label>
-        <div class="output-area" id="conv-output" style="min-height: 200px; max-height: 400px; overflow-y: auto;">Start a conversation...</div>
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <section class="interactive-section">
-    <h2>Interactive: Token Estimation</h2>
-    <p>Estimate token counts for text. No API key required.</p>
+      <!-- Exhibit 1: Stream Decoder -->
+      <section class="exhibit" id="exhibit-stream-decoder">
+        <div class="exhibit-header">
+          <h2 class="exhibit-title">Stream Decoder</h2>
+          <p class="exhibit-description">Watch how streaming actually works - SSE events arrive, get parsed, and assemble into readable text</p>
+        </div>
+        <div class="exhibit-content">
+          <div class="exhibit-interactive">
+            <div class="stream-panels">
+              <div class="stream-panel">
+                <div class="stream-panel-title">Raw SSE Stream</div>
+                <div class="stream-panel-content" id="sse-raw"></div>
+              </div>
+              <div class="stream-panel">
+                <div class="stream-panel-title">Parsed Chunks</div>
+                <div class="stream-panel-content" id="sse-chunks"></div>
+              </div>
+              <div class="stream-panel">
+                <div class="stream-panel-title">Assembled Output</div>
+                <div class="stream-panel-content">
+                  <div class="output-text" id="sse-output"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="exhibit-controls">
+            <select class="input" id="stream-preset">
+              <option value="short">Short response</option>
+              <option value="code">Code example</option>
+              <option value="long">Long response</option>
+              <option value="emoji">Emoji content</option>
+            </select>
+            <button class="btn btn-primary" id="stream-run">▶ Run</button>
+            <button class="btn btn-secondary" id="stream-pause">⏸ Pause</button>
+            <button class="btn btn-secondary" id="stream-replay">↻ Replay</button>
+            <div class="slider-container">
+              <span class="text-secondary">Speed:</span>
+              <input type="range" id="stream-speed" min="10" max="500" value="100">
+              <span class="slider-value" id="stream-speed-value">100ms</span>
+            </div>
+          </div>
+          <div class="exhibit-state">
+            <div class="exhibit-state-title">State</div>
+            <div class="flex gap-lg">
+              <div><span class="text-muted">Chunks:</span> <span id="stream-chunk-count">0</span></div>
+              <div><span class="text-muted">Bytes:</span> <span id="stream-bytes">0</span></div>
+              <div><span class="text-muted">Status:</span> <span id="stream-status" class="tag">Ready</span></div>
+              <div><span class="text-muted">Time:</span> <span id="stream-time">0.00s</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <div class="grid-2">
-      <div>
-        <label for="token-text">Text to Estimate</label>
-        <textarea id="token-text" placeholder="Enter text to estimate tokens...">Hello, world! This is a test message to estimate tokens.</textarea>
+      <!-- Exhibit 2: Resilience Lab -->
+      <section class="exhibit" id="exhibit-resilience-lab">
+        <div class="exhibit-header">
+          <h2 class="exhibit-title">Resilience Lab</h2>
+          <p class="exhibit-description">See retry logic in action - exponential backoff, jitter, and error handling made visible</p>
+        </div>
+        <div class="exhibit-content">
+          <div class="exhibit-interactive">
+            <div class="timeline-container">
+              <div class="timeline" id="resilience-timeline"></div>
+              <div class="event-log" id="resilience-log"></div>
+            </div>
+          </div>
+          <div class="exhibit-controls">
+            <div class="scenario-buttons">
+              <button class="scenario-btn active" data-scenario="success">Clean Success</button>
+              <button class="scenario-btn" data-scenario="rate-limit">Rate Limit (429)</button>
+              <button class="scenario-btn" data-scenario="server-error">Server Error (503)</button>
+              <button class="scenario-btn" data-scenario="timeout">Network Timeout</button>
+              <button class="scenario-btn" data-scenario="auth">Auth Failure (401)</button>
+              <button class="scenario-btn" data-scenario="max-retries">Max Retries</button>
+            </div>
+            <button class="btn btn-danger" id="resilience-abort" disabled>Abort</button>
+            <label class="toggle">
+              <input type="checkbox" id="resilience-accelerated" checked>
+              <span class="toggle-switch"></span>
+              <span class="toggle-label">10x Speed</span>
+            </label>
+          </div>
+          <div class="exhibit-state">
+            <div class="exhibit-state-title">State</div>
+            <div class="flex gap-lg">
+              <div><span class="text-muted">Attempt:</span> <span id="resilience-attempt">-</span></div>
+              <div><span class="text-muted">Next retry:</span> <span id="resilience-countdown">-</span></div>
+              <div><span class="text-muted">Elapsed:</span> <span id="resilience-elapsed">0.00s</span></div>
+              <div><span class="text-muted">Retriable:</span> <span id="resilience-retriable">-</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <button onclick="estimateTokensDemo()" style="background: #009688; color: white; margin-top: 10px;">Estimate Tokens</button>
-      </div>
-      <div>
-        <label>Results</label>
-        <div class="output-area" id="token-output">Results will appear here...</div>
-      </div>
-    </div>
-  </section>
+      <!-- Exhibit 3: Conversation State Machine -->
+      <section class="exhibit" id="exhibit-conversation">
+        <div class="exhibit-header">
+          <h2 class="exhibit-title">Conversation State Machine</h2>
+          <p class="exhibit-description">See the actual data structures being built - watch the messages array grow in real-time</p>
+        </div>
+        <div class="exhibit-content">
+          <div class="exhibit-interactive">
+            <div class="conversation-split">
+              <div class="conversation-panel">
+                <div class="conversation-panel-title">Conversation</div>
+                <div class="messages-container" id="conv-messages"></div>
+                <div class="message-input-area">
+                  <input type="text" class="input" id="conv-input" placeholder="Type a message...">
+                  <button class="btn btn-primary" id="conv-send">Send</button>
+                </div>
+              </div>
+              <div class="conversation-panel">
+                <div class="conversation-panel-title">State Inspector</div>
+                <div class="json-inspector" id="conv-json">
+                  <pre></pre>
+                </div>
+                <div class="context-bar-container">
+                  <div class="flex justify-between">
+                    <span class="text-muted text-xs">Token usage</span>
+                    <span class="text-muted text-xs" id="conv-token-count">0 / 200,000</span>
+                  </div>
+                  <div class="context-bar">
+                    <div class="context-bar-fill" id="conv-context-fill" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="exhibit-controls">
+            <select class="input" id="conv-preset">
+              <option value="coding">Coding Q&A</option>
+              <option value="creative">Creative Writing</option>
+              <option value="long">Long Context</option>
+              <option value="empty">Empty Slate</option>
+            </select>
+            <button class="btn btn-secondary" id="conv-load-preset">Load Preset</button>
+            <button class="btn btn-secondary" id="conv-clear">Clear</button>
+            <button class="btn btn-danger" id="conv-clear-all">Clear All</button>
+          </div>
+        </div>
+      </section>
 
-  <section class="interactive-section">
-    <h2>Interactive: Model Information</h2>
-    <p>Look up model context lengths and pricing. No API key required.</p>
+      <!-- Exhibit 4: Token Visualizer -->
+      <section class="exhibit" id="exhibit-token-visualizer">
+        <div class="exhibit-header">
+          <h2 class="exhibit-title">Token Visualizer</h2>
+          <p class="exhibit-description">See how token estimation works - watch text get chunked into ~4-character blocks</p>
+        </div>
+        <div class="exhibit-content">
+          <div class="exhibit-interactive">
+            <div class="token-input-area">
+              <textarea class="input" id="token-input" placeholder="Type or paste text...">The quick brown fox jumps over the lazy dog. This classic pangram contains every letter of the English alphabet at least once, making it perfect for testing fonts and keyboards.</textarea>
+            </div>
+            <div class="token-blocks" id="token-blocks"></div>
+            <div class="token-stats">
+              <div class="token-stat">
+                <div class="token-stat-label">Characters</div>
+                <div class="token-stat-value" id="token-chars">0</div>
+              </div>
+              <div class="token-stat">
+                <div class="token-stat-label">Estimated Tokens</div>
+                <div class="token-stat-value" id="token-count">0</div>
+              </div>
+              <div class="token-stat">
+                <div class="token-stat-label">Est. Prompt Cost</div>
+                <div class="token-stat-value" id="token-cost">$0.00</div>
+              </div>
+            </div>
+            <table class="model-table" id="model-table">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Context</th>
+                  <th>$/M Prompt</th>
+                  <th>$/M Completion</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="exhibit-controls">
+            <select class="input" id="token-preset">
+              <option value="pangram">Pangram</option>
+              <option value="code">Code Snippet</option>
+              <option value="long">Long Text</option>
+              <option value="minimal">Minimal</option>
+              <option value="unicode">Unicode</option>
+            </select>
+            <button class="btn btn-secondary" id="token-load-preset">Load Preset</button>
+            <button class="btn btn-secondary" id="token-reset">Reset</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 
-    <div class="grid-2">
-      <div>
-        <label for="model-id">Model ID</label>
-        <select id="model-id" onchange="lookupModelInfo()">
-          <option value="anthropic/claude-sonnet-4">anthropic/claude-sonnet-4</option>
-          <option value="anthropic/claude-3-opus">anthropic/claude-3-opus</option>
-          <option value="openai/gpt-4o">openai/gpt-4o</option>
-          <option value="openai/gpt-4-turbo">openai/gpt-4-turbo</option>
-          <option value="meta-llama/llama-3.1-405b">meta-llama/llama-3.1-405b</option>
-          <option value="unknown/model">unknown/model (not in database)</option>
-        </select>
-
-        <button onclick="lookupModelInfo()" style="background: #795548; color: white; margin-top: 10px;">Lookup Model</button>
-      </div>
-      <div>
-        <label>Model Info</label>
-        <div class="output-area" id="model-output">Select a model to see its info...</div>
-      </div>
-    </div>
-  </section>
-
-  <script>
-    // ============================================
-    // INLINED LIBRARY CODE (from dist/index.js)
-    // ============================================
-    class M extends Error {
-      constructor(e) {
-        super(e), this.name = "LLMError", Object.setPrototypeOf(this, new.target.prototype);
-      }
+  <!-- Library (simulated for demo) -->
+  <script type="module">
+    // Simulated library for demo purposes
+    window.Library = {
+      // This is a simulated placeholder
+      // In production, this would be: import * as Library from './dist/index.js'
     }
-    class A extends M {
-      constructor(e, r) {
-        super(e), this.field = r, this.name = "ValidationError";
-      }
-    }
-    class R extends M {
-      constructor(e, r, i) {
-        super(e), this.status = r, this.retryAfter = i, this.name = "RateLimitError";
-      }
-    }
-    class K extends M {
-      constructor(e, r) {
-        super(e), this.status = r, this.name = "AuthError";
-      }
-    }
-    class U extends M {
-      constructor(e, r) {
-        super(e), this.status = r, this.name = "ModelError";
-      }
-    }
-    class C extends M {
-      constructor(e, r) {
-        super(e), this.status = r, this.name = "ServerError";
-      }
-    }
-    class k extends M {
-      constructor(e, r) {
-        super(e), this.cause = r, this.name = "NetworkError";
-      }
-    }
-    class x extends M {
-      constructor(e, r) {
-        super(e), this.cause = r, this.name = "ParseError";
-      }
-    }
-    class G extends M {
-      constructor(e) {
-        super(e), this.name = "ConcurrencyError";
-      }
-    }
-    function X(t) {
-      return t === 429 || t >= 500;
-    }
-    function D(t, e) {
-      if (e !== void 0)
-        return e * 1e3;
-      const r = 1e3 * Math.pow(2, t), i = Math.random() * 200;
-      return Math.min(r + i, 3e4);
-    }
-    async function P(t, e) {
-      return new Promise((r, i) => {
-        if (e != null && e.aborted) {
-          i(new DOMException("The operation was aborted", "AbortError"));
-          return;
-        }
-        const s = setTimeout(() => {
-          e && e.removeEventListener("abort", n), r();
-        }, t), n = () => {
-          clearTimeout(s), i(new DOMException("The operation was aborted", "AbortError"));
-        };
-        e && e.addEventListener("abort", n, { once: !0 });
-      });
-    }
-    async function z(t) {
-      var i, s;
-      let e = `HTTP ${t.status}`;
-      try {
-        const n = await t.json();
-        (i = n == null ? void 0 : n.error) != null && i.message && (e = n.error.message);
-      } catch {
-        try {
-          const n = await t.text();
-          n && (e = n);
-        } catch {
-        }
-      }
-      const r = t.status;
-      if (r === 429) {
-        let n;
-        try {
-          const l = (s = t.headers) == null ? void 0 : s.get("Retry-After");
-          n = l ? parseInt(l, 10) : void 0;
-        } catch {
-          n = void 0;
-        }
-        throw new R(e, r, n);
-      }
-      throw r === 401 || r === 403 ? new K(e, r) : r === 404 ? new U(e, r) : new C(e, r);
-    }
-    async function I(t, e, r) {
-      var f;
-      const { maxRetries: i, shouldRetry: s, signal: n } = r;
-      if (n != null && n.aborted)
-        throw new DOMException("The operation was aborted", "AbortError");
-      let l;
-      const w = s ? i + 1 : 1;
-      for (let m = 0; m < w; m++)
-        try {
-          const c = {
-            method: e.method,
-            headers: e.headers,
-            ...e.body && { body: e.body },
-            ...n && { signal: n }
-          }, d = await fetch(t, c);
-          if (!d)
-            throw new Error("fetch returned undefined");
-          if (!d.ok) {
-            const y = d.status;
-            if (s && X(y) && m < w - 1) {
-              let p;
-              if (y === 429)
-                try {
-                  const a = (f = d.headers) == null ? void 0 : f.get("Retry-After");
-                  p = a ? parseInt(a, 10) : void 0;
-                } catch {
-                  p = void 0;
-                }
-              const u = D(m, p);
-              await P(u, n);
-              continue;
-            }
-            await z(d);
-          }
-          return d;
-        } catch (c) {
-          if (c instanceof DOMException && c.name === "AbortError")
-            throw c;
-          if (c instanceof R || c instanceof K || c instanceof U || c instanceof C) {
-            const d = c instanceof R || c instanceof C && c.status >= 500;
-            if (s && d && m < w - 1) {
-              const y = c instanceof R ? c.retryAfter : void 0, p = D(m, y);
-              await P(p, n), l = c;
-              continue;
-            }
-            throw c;
-          }
-          if (m < w - 1 && s) {
-            l = c;
-            const d = D(m);
-            await P(d, n);
-            continue;
-          }
-          throw new k(`Network request failed: ${c.message}`, c);
-        }
-      throw l || new k("Request failed after retries");
-    }
-    function Q(t) {
-      if (!t || typeof t != "object")
-        throw new x("Response is not a valid object");
-      const e = t;
-      if (!e.choices || !Array.isArray(e.choices) || e.choices.length === 0)
-        throw new x("Response missing choices array");
-      const r = e.choices[0];
-      if (!r || typeof r != "object")
-        throw new x("Invalid choice object in response");
-      if (!r.message || typeof r.message != "object")
-        throw new x("Response missing message object");
-      const i = r.message;
-      if (i.content === void 0 && i.content !== null && i.content !== "")
-        throw new x("Response missing content field");
-      return t;
-    }
-    async function* Y(t, e) {
-      var n, l, w;
-      if (!t.body)
-        throw new k("Response body is null");
-      const r = t.body.getReader(), i = new TextDecoder();
-      let s = "";
-      try {
-        for (; ; ) {
-          if (e != null && e.aborted)
-            throw r.cancel(), new DOMException("The operation was aborted", "AbortError");
-          const { done: f, value: m } = await r.read();
-          if (f)
-            break;
-          s += i.decode(m, { stream: !0 });
-          const c = s.split(`
-`);
-          s = c.pop() ?? "";
-          for (const d of c) {
-            const y = d.trim();
-            if (!(!y || y.startsWith(":")) && y.startsWith("data: ")) {
-              const p = y.slice(6);
-              if (p === "[DONE]")
-                return;
-              try {
-                const a = (w = (l = (n = JSON.parse(p).choices) == null ? void 0 : n[0]) == null ? void 0 : l.delta) == null ? void 0 : w.content;
-                a && a.length > 0 && (yield a);
-              } catch (u) {
-                throw new x(
-                  `Failed to parse SSE chunk: ${u.message}`,
-                  u
-                );
-              }
-            }
-          }
-        }
-      } catch (f) {
-        throw f instanceof DOMException && f.name === "AbortError" || f instanceof x ? f : new k(`Stream reading failed: ${f.message}`, f);
-      } finally {
-        r.releaseLock();
-      }
-    }
-    function Z(t, e, r) {
-      let i = r == null ? void 0 : r.system;
-      const s = [...(r == null ? void 0 : r.initialMessages) ?? []];
-      let n = !1;
-      function l() {
-        if (n)
-          throw new G("Cannot perform operation while a request is in progress");
-      }
-      function w() {
-        const u = [];
-        return i && u.push({ role: "system", content: i }), u.push(...s), u;
-      }
-      function f() {
-        const u = [];
-        return i && u.push({ role: "system", content: i }), u.push(...s), u;
-      }
-      async function m(u, a) {
-        l(), n = !0;
-        try {
-          s.push({ role: "user", content: u });
-          const o = w(), h = await t(o, a);
-          return s.push({ role: "assistant", content: h.content }), h.content;
-        } finally {
-          n = !1;
-        }
-      }
-      function c(u, a) {
-        l(), n = !0, s.push({ role: "user", content: u });
-        const o = w(), h = e(o, a);
-        let b = "", T = !1, E;
-        return {
-          async *[Symbol.asyncIterator]() {
-            try {
-              for await (const g of h)
-                b += g, yield g;
-              T = !0;
-            } catch (g) {
-              throw E = g, g;
-            } finally {
-              n = !1, T && !E ? s.push({ role: "assistant", content: b }) : E && s.pop();
-            }
-          }
-        };
-      }
-      function d(u, a) {
-        if (l(), u === "system")
-          throw new A(
-            "Cannot add system messages manually, use constructor for system prompt",
-            "role"
-          );
-        if (u !== "user" && u !== "assistant")
-          throw new A(`Invalid role: ${u}. Must be 'user' or 'assistant'.`, "role");
-        if (typeof a != "string")
-          throw new TypeError("Message content must be a string");
-        s.push({ role: u, content: a });
-      }
-      function y() {
-        l(), s.length = 0;
-      }
-      function p() {
-        l(), s.length = 0, i = void 0;
-      }
-      return {
-        send: m,
-        sendStream: c,
-        get history() {
-          return [...f()];
-        },
-        addMessage: d,
-        clear: y,
-        clearAll: p
-      };
-    }
-    function O(t) {
-      return t.length === 0 ? 0 : Math.ceil(t.length / 4);
-    }
-    const ee = {
-      "anthropic/claude-sonnet-4": {
-        contextLength: 2e5,
-        pricing: {
-          prompt: 3,
-          completion: 15
-        }
-      },
-      "anthropic/claude-3-opus": {
-        contextLength: 2e5,
-        pricing: {
-          prompt: 15,
-          completion: 75
-        }
-      },
-      "openai/gpt-4o": {
-        contextLength: 128e3,
-        pricing: {
-          prompt: 5,
-          completion: 15
-        }
-      },
-      "openai/gpt-4-turbo": {
-        contextLength: 128e3,
-        pricing: {
-          prompt: 10,
-          completion: 30
-        }
-      },
-      "meta-llama/llama-3.1-405b": {
-        contextLength: 128e3,
-        pricing: {
-          prompt: 3,
-          completion: 3
-        }
-      }
-    };
-    function te(t) {
-      return ee[t];
-    }
-    const re = "https://openrouter.ai/api/v1", oe = 3;
-    function ne(t) {
-      if (!t.apiKey || t.apiKey.trim() === "")
-        throw new A("apiKey is required and cannot be empty", "apiKey");
-      if (!t.model || t.model.trim() === "")
-        throw new A("model is required and cannot be empty", "model");
-    }
-    function N(t) {
-      if (!Array.isArray(t) || t.length === 0)
-        throw new A("messages array cannot be empty", "messages");
-      for (const e of t) {
-        if (!e.role || !["system", "user", "assistant"].includes(e.role))
-          throw new A(
-            `Invalid message role: ${e.role}. Must be 'system', 'user', or 'assistant'.`,
-            "role"
-          );
-        if (typeof e.content != "string")
-          throw new TypeError("Message content must be a string");
-      }
-    }
-    function $(t) {
-      if (t && t.temperature !== void 0 && (typeof t.temperature != "number" || t.temperature < 0 || t.temperature > 2))
-        throw new A("temperature must be between 0 and 2", "temperature");
-    }
-    function H(t, e) {
-      const r = { ...t };
-      return e && (e.temperature !== void 0 && (r.temperature = e.temperature), e.maxTokens !== void 0 && (r.maxTokens = e.maxTokens), e.topP !== void 0 && (r.topP = e.topP), e.stop !== void 0 && (r.stop = e.stop)), r;
-    }
-    function q(t, e, r, i) {
-      const s = {
-        model: e,
-        messages: t,
-        stream: i
-      };
-      return r.temperature !== void 0 && (s.temperature = r.temperature), r.maxTokens !== void 0 && (s.max_tokens = r.maxTokens), r.topP !== void 0 && (s.top_p = r.topP), r.stop !== void 0 && (s.stop = r.stop), JSON.stringify(s);
-    }
-    function se(t) {
-      return t.includes("openrouter");
-    }
-    function ie(t) {
-      ne(t);
-      const e = t.baseUrl ?? re, r = t.apiKey;
-      let i = t.model;
-      const s = t.defaultParams, n = t.referer ?? "https://github.com/motioneffector/llm", l = t.title ?? "LLM Client";
-      function w() {
-        const a = {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${r}`
-        };
-        return se(e) && (a["HTTP-Referer"] = n, a["X-Title"] = l), a;
-      }
-      function f() {
-        return `${e.endsWith("/") ? e.slice(0, -1) : e}/chat/completions`;
-      }
-      async function m(a, o) {
-        var j;
-        if (N(a), $(o), (j = o == null ? void 0 : o.signal) != null && j.aborted)
-          throw new DOMException("The operation was aborted", "AbortError");
-        const h = Date.now(), b = (o == null ? void 0 : o.model) ?? i, T = H(s, o), E = q(a, b, T, !1), g = (o == null ? void 0 : o.maxRetries) ?? oe, L = (o == null ? void 0 : o.retry) !== !1, F = await I(
-          f(),
-          {
-            method: "POST",
-            headers: w(),
-            body: E,
-            signal: o == null ? void 0 : o.signal
-          },
-          {
-            maxRetries: g,
-            shouldRetry: L,
-            signal: o == null ? void 0 : o.signal
-          }
-        ), W = Date.now() - h;
-        let _;
-        try {
-          _ = await F.json();
-        } catch (V) {
-          throw new x("Failed to parse JSON response", V);
-        }
-        const v = Q(_), S = v.choices[0];
-        if (!S)
-          throw new x("No choices in response");
-        const B = S.message.content ?? "", J = v.usage ? {
-          promptTokens: v.usage.prompt_tokens,
-          completionTokens: v.usage.completion_tokens,
-          totalTokens: v.usage.total_tokens
-        } : {
-          promptTokens: 0,
-          completionTokens: 0,
-          totalTokens: 0
-        };
-        return {
-          content: B,
-          usage: J,
-          model: v.model,
-          id: v.id,
-          finishReason: S.finish_reason ?? null,
-          latency: W
-        };
-      }
-      function c(a, o) {
-        var g;
-        if (N(a), $(o), (g = o == null ? void 0 : o.signal) != null && g.aborted)
-          throw new DOMException("The operation was aborted", "AbortError");
-        const h = (o == null ? void 0 : o.model) ?? i, b = H(s, o), T = q(a, h, b, !0);
-        let E = !1;
-        return {
-          async *[Symbol.asyncIterator]() {
-            if (E)
-              return;
-            E = !0;
-            const L = await I(
-              f(),
-              {
-                method: "POST",
-                headers: w(),
-                body: T,
-                signal: o == null ? void 0 : o.signal
-              },
-              {
-                maxRetries: 0,
-                shouldRetry: !1,
-                signal: o == null ? void 0 : o.signal
-              }
-            );
-            yield* Y(L, o == null ? void 0 : o.signal);
-          }
-        };
-      }
-      function d() {
-        return i;
-      }
-      function y(a) {
-        if (!a || a.trim() === "")
-          throw new A("model cannot be empty", "model");
-        i = a;
-      }
-      function p(a) {
-        return Z(m, c, a);
-      }
-      function u(a) {
-        let h = 0;
-        for (const g of a)
-          h += O(g.content), h += 3;
-        const b = te(i), T = (b == null ? void 0 : b.contextLength) ?? 128e3, E = Math.max(0, T - h);
-        return { prompt: h, available: E };
-      }
-      return {
-        chat: m,
-        stream: c,
-        createConversation: p,
-        getModel: d,
-        setModel: y,
-        estimateChat: u
-      };
-    }
-
-    // Expose to window
-    window.createLLMClient = ie;
-    window.getModelInfo = te;
-    window.estimateTokens = O;
-    window.LLMError = M;
-    window.ValidationError = A;
-    window.RateLimitError = R;
-    window.AuthError = K;
-    window.ModelError = U;
-    window.ServerError = C;
-    window.NetworkError = k;
-    window.ParseError = x;
-    window.ConcurrencyError = G;
-    // ============================================
   </script>
 
-  <script>
-    // ============================================
-    // DEMO AND TEST CODE
-    // ============================================
-
-    function getApiKey() {
-      return document.getElementById('api-key').value.trim();
-    }
-
-    function hasApiKey() {
-      return getApiKey().length > 0;
-    }
-
-    // ============================================
-    // TEST DEFINITIONS
-    // ============================================
-
-    const unitTests = [
-      // Error class tests
-      {
-        name: 'LLMError extends Error',
-        fn: () => {
-          const err = new LLMError('test');
-          if (!(err instanceof Error)) throw new Error('Not an Error instance');
-          if (err.name !== 'LLMError') throw new Error(`Expected name 'LLMError', got '${err.name}'`);
-          if (err.message !== 'test') throw new Error(`Expected message 'test', got '${err.message}'`);
-        }
-      },
-      {
-        name: 'ValidationError has field property',
-        fn: () => {
-          const err = new ValidationError('bad input', 'fieldName');
-          if (err.name !== 'ValidationError') throw new Error('Wrong name');
-          if (err.field !== 'fieldName') throw new Error(`Expected field 'fieldName', got '${err.field}'`);
-        }
-      },
-      {
-        name: 'RateLimitError has status and retryAfter',
-        fn: () => {
-          const err = new RateLimitError('rate limited', 429, 60);
-          if (err.status !== 429) throw new Error('Wrong status');
-          if (err.retryAfter !== 60) throw new Error('Wrong retryAfter');
-        }
-      },
-      {
-        name: 'AuthError has status',
-        fn: () => {
-          const err = new AuthError('unauthorized', 401);
-          if (err.status !== 401) throw new Error('Wrong status');
-        }
-      },
-      {
-        name: 'ModelError has status',
-        fn: () => {
-          const err = new ModelError('not found', 404);
-          if (err.status !== 404) throw new Error('Wrong status');
-        }
-      },
-      {
-        name: 'ServerError has status',
-        fn: () => {
-          const err = new ServerError('internal error', 500);
-          if (err.status !== 500) throw new Error('Wrong status');
-        }
-      },
-      {
-        name: 'NetworkError has cause',
-        fn: () => {
-          const cause = new Error('network failed');
-          const err = new NetworkError('request failed', cause);
-          if (err.cause !== cause) throw new Error('Wrong cause');
-        }
-      },
-      {
-        name: 'ParseError has cause',
-        fn: () => {
-          const cause = new Error('JSON parse failed');
-          const err = new ParseError('parse failed', cause);
-          if (err.cause !== cause) throw new Error('Wrong cause');
-        }
-      },
-      {
-        name: 'ConcurrencyError is instanceof LLMError',
-        fn: () => {
-          const err = new ConcurrencyError('concurrent');
-          if (!(err instanceof LLMError)) throw new Error('Not LLMError instance');
-        }
-      },
-
-      // estimateTokens tests
-      {
-        name: 'estimateTokens returns 0 for empty string',
-        fn: () => {
-          const result = estimateTokens('');
-          if (result !== 0) throw new Error(`Expected 0, got ${result}`);
-        }
-      },
-      {
-        name: 'estimateTokens returns ~1 token per 4 chars',
-        fn: () => {
-          const result = estimateTokens('1234'); // 4 chars = 1 token
-          if (result !== 1) throw new Error(`Expected 1, got ${result}`);
-        }
-      },
-      {
-        name: 'estimateTokens rounds up',
-        fn: () => {
-          const result = estimateTokens('12345'); // 5 chars = ceil(5/4) = 2
-          if (result !== 2) throw new Error(`Expected 2, got ${result}`);
-        }
-      },
-      {
-        name: 'estimateTokens handles long text',
-        fn: () => {
-          const text = 'a'.repeat(100);
-          const result = estimateTokens(text);
-          if (result !== 25) throw new Error(`Expected 25, got ${result}`);
-        }
-      },
-
-      // getModelInfo tests
-      {
-        name: 'getModelInfo returns info for known model',
-        fn: () => {
-          const info = getModelInfo('anthropic/claude-sonnet-4');
-          if (!info) throw new Error('Expected model info');
-          if (info.contextLength !== 200000) throw new Error(`Wrong context length: ${info.contextLength}`);
-        }
-      },
-      {
-        name: 'getModelInfo returns pricing for claude-sonnet-4',
-        fn: () => {
-          const info = getModelInfo('anthropic/claude-sonnet-4');
-          if (info.pricing.prompt !== 3) throw new Error(`Wrong prompt price: ${info.pricing.prompt}`);
-          if (info.pricing.completion !== 15) throw new Error(`Wrong completion price: ${info.pricing.completion}`);
-        }
-      },
-      {
-        name: 'getModelInfo returns info for gpt-4o',
-        fn: () => {
-          const info = getModelInfo('openai/gpt-4o');
-          if (!info) throw new Error('Expected model info');
-          if (info.contextLength !== 128000) throw new Error(`Wrong context length: ${info.contextLength}`);
-        }
-      },
-      {
-        name: 'getModelInfo returns undefined for unknown model',
-        fn: () => {
-          const info = getModelInfo('unknown/model');
-          if (info !== undefined) throw new Error('Expected undefined');
-        }
-      },
-
-      // createLLMClient validation tests
-      {
-        name: 'createLLMClient throws ValidationError for missing apiKey',
-        fn: () => {
-          try {
-            createLLMClient({ apiKey: '', model: 'test' });
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof ValidationError)) throw new Error('Wrong error type');
-            if (e.field !== 'apiKey') throw new Error(`Wrong field: ${e.field}`);
-          }
-        }
-      },
-      {
-        name: 'createLLMClient throws ValidationError for missing model',
-        fn: () => {
-          try {
-            createLLMClient({ apiKey: 'test-key', model: '' });
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof ValidationError)) throw new Error('Wrong error type');
-            if (e.field !== 'model') throw new Error(`Wrong field: ${e.field}`);
-          }
-        }
-      },
-      {
-        name: 'createLLMClient throws for whitespace-only apiKey',
-        fn: () => {
-          try {
-            createLLMClient({ apiKey: '   ', model: 'test' });
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof ValidationError)) throw new Error('Wrong error type');
-          }
-        }
-      },
-      {
-        name: 'createLLMClient creates client with valid options',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test-key', model: 'test-model' });
-          if (!client) throw new Error('No client returned');
-          if (typeof client.chat !== 'function') throw new Error('Missing chat method');
-          if (typeof client.stream !== 'function') throw new Error('Missing stream method');
-        }
-      },
-
-      // Client method tests (without API calls)
-      {
-        name: 'client.getModel returns the configured model',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'my-model' });
-          if (client.getModel() !== 'my-model') throw new Error('Wrong model');
-        }
-      },
-      {
-        name: 'client.setModel changes the model',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'model-1' });
-          client.setModel('model-2');
-          if (client.getModel() !== 'model-2') throw new Error('Model not changed');
-        }
-      },
-      {
-        name: 'client.setModel throws for empty model',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'model-1' });
-          try {
-            client.setModel('');
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof ValidationError)) throw new Error('Wrong error type');
-          }
-        }
-      },
-      {
-        name: 'client.estimateChat returns prompt and available tokens',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'anthropic/claude-sonnet-4' });
-          const estimate = client.estimateChat([{ role: 'user', content: 'Hello!' }]);
-          if (typeof estimate.prompt !== 'number') throw new Error('Missing prompt');
-          if (typeof estimate.available !== 'number') throw new Error('Missing available');
-          if (estimate.prompt <= 0) throw new Error('Prompt should be > 0');
-        }
-      },
-      {
-        name: 'client.createConversation returns conversation object',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const conv = client.createConversation();
-          if (!conv) throw new Error('No conversation returned');
-          if (typeof conv.send !== 'function') throw new Error('Missing send');
-          if (typeof conv.sendStream !== 'function') throw new Error('Missing sendStream');
-          if (!Array.isArray(conv.history)) throw new Error('Missing history');
-        }
-      },
-
-      // Conversation validation tests
-      {
-        name: 'conversation.history starts empty',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const conv = client.createConversation();
-          if (conv.history.length !== 0) throw new Error('History should be empty');
-        }
-      },
-      {
-        name: 'conversation with system prompt includes it in history',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const conv = client.createConversation({ system: 'Be helpful' });
-          if (conv.history.length !== 1) throw new Error('Should have 1 message');
-          if (conv.history[0].role !== 'system') throw new Error('Should be system');
-          if (conv.history[0].content !== 'Be helpful') throw new Error('Wrong content');
-        }
-      },
-      {
-        name: 'conversation.addMessage adds user message',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const conv = client.createConversation();
-          conv.addMessage('user', 'Hello');
-          if (conv.history.length !== 1) throw new Error('Should have 1 message');
-          if (conv.history[0].role !== 'user') throw new Error('Wrong role');
-        }
-      },
-      {
-        name: 'conversation.addMessage adds assistant message',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const conv = client.createConversation();
-          conv.addMessage('assistant', 'Hi there');
-          if (conv.history[0].role !== 'assistant') throw new Error('Wrong role');
-        }
-      },
-      {
-        name: 'conversation.addMessage throws for system role',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const conv = client.createConversation();
-          try {
-            conv.addMessage('system', 'test');
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof ValidationError)) throw new Error('Wrong error type');
-          }
-        }
-      },
-      {
-        name: 'conversation.addMessage throws for invalid role',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const conv = client.createConversation();
-          try {
-            conv.addMessage('invalid', 'test');
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof ValidationError)) throw new Error('Wrong error type');
-          }
-        }
-      },
-      {
-        name: 'conversation.addMessage throws for non-string content',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const conv = client.createConversation();
-          try {
-            conv.addMessage('user', 123);
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof TypeError)) throw new Error('Wrong error type');
-          }
-        }
-      },
-      {
-        name: 'conversation.clear removes messages but keeps system',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const conv = client.createConversation({ system: 'System prompt' });
-          conv.addMessage('user', 'Hello');
-          conv.clear();
-          if (conv.history.length !== 1) throw new Error('Should have 1 (system)');
-          if (conv.history[0].role !== 'system') throw new Error('Should be system');
-        }
-      },
-      {
-        name: 'conversation.clearAll removes everything',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const conv = client.createConversation({ system: 'System prompt' });
-          conv.addMessage('user', 'Hello');
-          conv.clearAll();
-          if (conv.history.length !== 0) throw new Error('Should be empty');
-        }
-      },
-      {
-        name: 'conversation with initialMessages has them in history',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const conv = client.createConversation({
-            initialMessages: [
-              { role: 'user', content: 'First' },
-              { role: 'assistant', content: 'Second' }
-            ]
-          });
-          if (conv.history.length !== 2) throw new Error('Should have 2 messages');
-        }
-      },
-
-      // Chat validation tests
-      {
-        name: 'chat throws ValidationError for empty messages',
-        fn: async () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          try {
-            await client.chat([]);
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof ValidationError)) throw new Error('Wrong error type');
-          }
-        }
-      },
-      {
-        name: 'chat throws ValidationError for invalid role',
-        fn: async () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          try {
-            await client.chat([{ role: 'invalid', content: 'test' }]);
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof ValidationError)) throw new Error('Wrong error type');
-          }
-        }
-      },
-      {
-        name: 'chat throws TypeError for non-string content',
-        fn: async () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          try {
-            await client.chat([{ role: 'user', content: 123 }]);
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof TypeError)) throw new Error(`Wrong error type: ${e.name}`);
-          }
-        }
-      },
-      {
-        name: 'chat throws ValidationError for temperature > 2',
-        fn: async () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          try {
-            await client.chat([{ role: 'user', content: 'test' }], { temperature: 3 });
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof ValidationError)) throw new Error('Wrong error type');
-            if (e.field !== 'temperature') throw new Error(`Wrong field: ${e.field}`);
-          }
-        }
-      },
-      {
-        name: 'chat throws ValidationError for temperature < 0',
-        fn: async () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          try {
-            await client.chat([{ role: 'user', content: 'test' }], { temperature: -1 });
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof ValidationError)) throw new Error('Wrong error type');
-          }
-        }
-      },
-      {
-        name: 'chat throws AbortError for pre-aborted signal',
-        fn: async () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const controller = new AbortController();
-          controller.abort();
-          try {
-            await client.chat([{ role: 'user', content: 'test' }], { signal: controller.signal });
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (e.name !== 'AbortError') throw new Error(`Wrong error: ${e.name}`);
-          }
-        }
-      },
-
-      // Stream validation tests
-      {
-        name: 'stream throws ValidationError for empty messages',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          try {
-            client.stream([]);
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (!(e instanceof ValidationError)) throw new Error('Wrong error type');
-          }
-        }
-      },
-      {
-        name: 'stream throws AbortError for pre-aborted signal',
-        fn: () => {
-          const client = createLLMClient({ apiKey: 'test', model: 'test' });
-          const controller = new AbortController();
-          controller.abort();
-          try {
-            client.stream([{ role: 'user', content: 'test' }], { signal: controller.signal });
-            throw new Error('Should have thrown');
-          } catch (e) {
-            if (e.name !== 'AbortError') throw new Error(`Wrong error: ${e.name}`);
-          }
-        }
-      },
-    ];
-
-    const liveTests = [
-      {
-        name: 'LIVE: chat returns valid response',
-        fn: async () => {
-          const apiKey = getApiKey();
-          if (!apiKey) throw new Error('API key required');
-          const client = createLLMClient({ apiKey, model: 'openai/gpt-4o-mini' });
-          const response = await client.chat([
-            { role: 'user', content: 'Say "hello" and nothing else.' }
-          ], { maxTokens: 10 });
-          if (!response.content) throw new Error('No content in response');
-          if (typeof response.content !== 'string') throw new Error('Content not a string');
-        }
-      },
-      {
-        name: 'LIVE: chat response has usage stats',
-        fn: async () => {
-          const apiKey = getApiKey();
-          if (!apiKey) throw new Error('API key required');
-          const client = createLLMClient({ apiKey, model: 'openai/gpt-4o-mini' });
-          const response = await client.chat([
-            { role: 'user', content: 'Say "test"' }
-          ], { maxTokens: 10 });
-          if (typeof response.usage.promptTokens !== 'number') throw new Error('Missing promptTokens');
-          if (typeof response.usage.completionTokens !== 'number') throw new Error('Missing completionTokens');
-          if (typeof response.usage.totalTokens !== 'number') throw new Error('Missing totalTokens');
-        }
-      },
-      {
-        name: 'LIVE: chat response has metadata',
-        fn: async () => {
-          const apiKey = getApiKey();
-          if (!apiKey) throw new Error('API key required');
-          const client = createLLMClient({ apiKey, model: 'openai/gpt-4o-mini' });
-          const response = await client.chat([
-            { role: 'user', content: 'Say "hi"' }
-          ], { maxTokens: 10 });
-          if (!response.id) throw new Error('Missing id');
-          if (!response.model) throw new Error('Missing model');
-          if (typeof response.latency !== 'number') throw new Error('Missing latency');
-        }
-      },
-      {
-        name: 'LIVE: chat with temperature parameter',
-        fn: async () => {
-          const apiKey = getApiKey();
-          if (!apiKey) throw new Error('API key required');
-          const client = createLLMClient({ apiKey, model: 'openai/gpt-4o-mini' });
-          const response = await client.chat([
-            { role: 'user', content: 'Say "ok"' }
-          ], { temperature: 0, maxTokens: 10 });
-          if (!response.content) throw new Error('No response');
-        }
-      },
-      {
-        name: 'LIVE: chat with model override',
-        fn: async () => {
-          const apiKey = getApiKey();
-          if (!apiKey) throw new Error('API key required');
-          const client = createLLMClient({ apiKey, model: 'openai/gpt-4o' });
-          const response = await client.chat([
-            { role: 'user', content: 'Say "yes"' }
-          ], { model: 'openai/gpt-4o-mini', maxTokens: 10 });
-          if (!response.model.includes('gpt-4o-mini')) throw new Error(`Wrong model used: ${response.model}`);
-        }
-      },
-      {
-        name: 'LIVE: stream yields chunks',
-        fn: async () => {
-          const apiKey = getApiKey();
-          if (!apiKey) throw new Error('API key required');
-          const client = createLLMClient({ apiKey, model: 'openai/gpt-4o-mini' });
-          const stream = client.stream([
-            { role: 'user', content: 'Count from 1 to 3' }
-          ], { maxTokens: 20 });
-          let chunks = [];
-          for await (const chunk of stream) {
-            chunks.push(chunk);
-          }
-          if (chunks.length === 0) throw new Error('No chunks received');
-        }
-      },
-      {
-        name: 'LIVE: stream can be aborted',
-        fn: async () => {
-          const apiKey = getApiKey();
-          if (!apiKey) throw new Error('API key required');
-          const client = createLLMClient({ apiKey, model: 'openai/gpt-4o-mini' });
-          const controller = new AbortController();
-          const stream = client.stream([
-            { role: 'user', content: 'Write a very long essay about everything in the universe' }
-          ], { signal: controller.signal });
-          let chunkCount = 0;
-          try {
-            for await (const chunk of stream) {
-              chunkCount++;
-              if (chunkCount >= 2) {
-                controller.abort();
-              }
-            }
-            throw new Error('Should have thrown AbortError');
-          } catch (e) {
-            if (e.name !== 'AbortError') throw new Error(`Expected AbortError, got ${e.name}`);
-          }
-        }
-      },
-      {
-        name: 'LIVE: conversation.send works',
-        fn: async () => {
-          const apiKey = getApiKey();
-          if (!apiKey) throw new Error('API key required');
-          const client = createLLMClient({ apiKey, model: 'openai/gpt-4o-mini' });
-          const conv = client.createConversation({ system: 'Reply with single words only.' });
-          const reply = await conv.send('Say hello', { maxTokens: 10 });
-          if (!reply) throw new Error('No reply');
-          if (conv.history.length !== 3) throw new Error(`Expected 3 messages, got ${conv.history.length}`);
-        }
-      },
-      {
-        name: 'LIVE: conversation maintains context',
-        fn: async () => {
-          const apiKey = getApiKey();
-          if (!apiKey) throw new Error('API key required');
-          const client = createLLMClient({ apiKey, model: 'openai/gpt-4o-mini' });
-          const conv = client.createConversation();
-          await conv.send('My name is TestUser123', { maxTokens: 30 });
-          const reply = await conv.send('What is my name?', { maxTokens: 30 });
-          if (!reply.toLowerCase().includes('testuser123')) {
-            throw new Error(`Expected name in reply: ${reply}`);
-          }
-        }
-      },
-      {
-        name: 'LIVE: conversation.sendStream works',
-        fn: async () => {
-          const apiKey = getApiKey();
-          if (!apiKey) throw new Error('API key required');
-          const client = createLLMClient({ apiKey, model: 'openai/gpt-4o-mini' });
-          const conv = client.createConversation();
-          const stream = conv.sendStream('Say "streaming works"', { maxTokens: 20 });
-          let result = '';
-          for await (const chunk of stream) {
-            result += chunk;
-          }
-          if (!result) throw new Error('No streamed content');
-          if (conv.history.length !== 2) throw new Error('History not updated');
-        }
-      },
-      {
-        name: 'LIVE: AuthError for invalid API key',
-        fn: async () => {
-          const client = createLLMClient({ apiKey: 'invalid-key-12345', model: 'openai/gpt-4o-mini' });
-          try {
-            await client.chat([{ role: 'user', content: 'test' }], { retry: false });
-            throw new Error('Should have thrown AuthError');
-          } catch (e) {
-            if (!(e instanceof AuthError)) throw new Error(`Expected AuthError, got ${e.name}`);
-          }
-        }
-      },
-    ];
-
-    // ============================================
-    // TEST RUNNER
-    // ============================================
-
-    function logResult(name, status, error) {
-      const output = document.getElementById('test-output');
-      const className = status === 'PASS' ? 'test-pass' : status === 'SKIP' ? 'test-skip' : 'test-fail';
-      const icon = status === 'PASS' ? '✓' : status === 'SKIP' ? '○' : '✗';
-      const errorMsg = error ? ` - ${error}` : '';
-      output.innerHTML += `<div class="${className}">${icon} [${status}] ${name}${errorMsg}</div>`;
-      output.scrollTop = output.scrollHeight;
-    }
-
-    function logSummary(passed, failed, skipped) {
-      const summary = document.getElementById('summary');
-      const total = passed + failed + skipped;
-      const className = failed === 0 ? 'test-pass' : 'test-fail';
-      let text = `<span class="${className}">${passed}/${total - skipped} tests passed</span>`;
-      if (skipped > 0) {
-        text += ` <span class="test-skip">(${skipped} skipped)</span>`;
-      }
-      summary.innerHTML = text;
-    }
-
-    function logSection(title) {
-      const output = document.getElementById('test-output');
-      output.innerHTML += `\n<div style="color: #888; margin: 10px 0 5px;">── ${title} ──</div>`;
-    }
-
-    async function runTests(tests, skipLiveWithoutKey = false) {
-      let passed = 0, failed = 0, skipped = 0;
-
-      for (const test of tests) {
-        const isLive = test.name.startsWith('LIVE:');
-
-        if (isLive && skipLiveWithoutKey && !hasApiKey()) {
-          logResult(test.name, 'SKIP', 'No API key provided');
-          skipped++;
-          continue;
-        }
-
-        try {
-          await test.fn();
-          logResult(test.name, 'PASS');
-          passed++;
-        } catch (e) {
-          logResult(test.name, 'FAIL', e.message);
-          failed++;
-        }
-
-        // Small delay between tests for UI updates
-        await new Promise(r => setTimeout(r, 10));
-      }
-
-      return { passed, failed, skipped };
-    }
-
-    async function runAllTests() {
-      clearResults();
-      const output = document.getElementById('test-output');
-      output.innerHTML = 'Running all tests...\n';
-
-      logSection('Unit Tests');
-      const unitResult = await runTests(unitTests);
-
-      logSection('Live API Tests');
-      if (!hasApiKey()) {
-        output.innerHTML += '<div class="test-skip">⚠ No API key provided - live tests will be skipped</div>\n';
-      }
-      const liveResult = await runTests(liveTests, true);
-
-      logSummary(
-        unitResult.passed + liveResult.passed,
-        unitResult.failed + liveResult.failed,
-        unitResult.skipped + liveResult.skipped
-      );
-    }
-
-    async function runUnitTests() {
-      clearResults();
-      const output = document.getElementById('test-output');
-      output.innerHTML = 'Running unit tests...\n';
-
-      logSection('Unit Tests');
-      const result = await runTests(unitTests);
-      logSummary(result.passed, result.failed, result.skipped);
-    }
-
-    async function runLiveTests() {
-      clearResults();
-      const output = document.getElementById('test-output');
-
-      if (!hasApiKey()) {
-        output.innerHTML = '<div class="test-fail">✗ API key required for live tests. Enter your OpenRouter API key above.</div>';
-        return;
-      }
-
-      output.innerHTML = 'Running live API tests...\n';
-      logSection('Live API Tests');
-      const result = await runTests(liveTests);
-      logSummary(result.passed, result.failed, result.skipped);
-    }
-
-    function clearResults() {
-      document.getElementById('test-output').innerHTML = 'Click a button to run tests...';
-      document.getElementById('summary').innerHTML = '';
-    }
-
-    // ============================================
-    // INTERACTIVE DEMO FUNCTIONS
-    // ============================================
-
-    let currentConversation = null;
-
-    function getClient() {
-      const apiKey = getApiKey();
-      if (!apiKey) {
-        throw new Error('Please enter your OpenRouter API key above');
-      }
-      const model = document.getElementById('chat-model').value;
-      return createLLMClient({ apiKey, model });
-    }
-
-    async function runChat() {
-      const output = document.getElementById('chat-output');
-      output.className = 'output-area stream-output';
-      output.textContent = 'Sending request...';
-
-      try {
-        const client = getClient();
-        const prompt = document.getElementById('chat-prompt').value;
-        const temp = parseFloat(document.getElementById('chat-temp').value);
-
-        const response = await client.chat([
-          { role: 'user', content: prompt }
-        ], { temperature: temp });
-
-        output.textContent = response.content;
-        output.textContent += `\n\n--- Metadata ---`;
-        output.textContent += `\nModel: ${response.model}`;
-        output.textContent += `\nTokens: ${response.usage.totalTokens} (prompt: ${response.usage.promptTokens}, completion: ${response.usage.completionTokens})`;
-        output.textContent += `\nLatency: ${response.latency}ms`;
-        output.textContent += `\nFinish reason: ${response.finishReason}`;
-      } catch (e) {
-        output.className = 'output-area error-output';
-        output.textContent = `Error: ${e.message}`;
-      }
-    }
-
-    async function runStreamChat() {
-      const output = document.getElementById('chat-output');
-      output.className = 'output-area stream-output';
-      output.textContent = '';
-
-      try {
-        const client = getClient();
-        const prompt = document.getElementById('chat-prompt').value;
-        const temp = parseFloat(document.getElementById('chat-temp').value);
-
-        const stream = client.stream([
-          { role: 'user', content: prompt }
-        ], { temperature: temp });
-
-        for await (const chunk of stream) {
-          output.textContent += chunk;
-        }
-      } catch (e) {
-        output.className = 'output-area error-output';
-        output.textContent = `Error: ${e.message}`;
-      }
-    }
-
-    function renderConversation() {
-      const output = document.getElementById('conv-output');
-      if (!currentConversation) {
-        output.textContent = 'Start a conversation...';
-        return;
-      }
-
-      output.innerHTML = '';
-      for (const msg of currentConversation.history) {
-        const roleColor = msg.role === 'system' ? '#9c27b0' : msg.role === 'user' ? '#2196F3' : '#4CAF50';
-        const div = document.createElement('div');
-        div.style.marginBottom = '10px';
-        div.innerHTML = `<strong style="color: ${roleColor}">${msg.role}:</strong> ${msg.content}`;
-        output.appendChild(div);
-      }
-      output.scrollTop = output.scrollHeight;
-    }
-
-    function ensureConversation() {
-      if (!currentConversation) {
-        const client = getClient();
-        const system = document.getElementById('conv-system').value;
-        currentConversation = client.createConversation(system ? { system } : undefined);
-      }
-      return currentConversation;
-    }
-
-    async function sendConversation() {
-      const output = document.getElementById('conv-output');
-      try {
-        const conv = ensureConversation();
-        const message = document.getElementById('conv-message').value;
-        document.getElementById('conv-message').value = '';
-
-        // Show user message immediately
-        renderConversation();
-        output.innerHTML += `<div style="margin-bottom: 10px"><strong style="color: #2196F3">user:</strong> ${message}</div>`;
-        output.innerHTML += `<div style="color: #888">Waiting for response...</div>`;
-
-        const reply = await conv.send(message);
-        renderConversation();
-      } catch (e) {
-        output.innerHTML += `<div style="color: red">Error: ${e.message}</div>`;
-      }
-    }
-
-    async function streamConversation() {
-      const output = document.getElementById('conv-output');
-      try {
-        const conv = ensureConversation();
-        const message = document.getElementById('conv-message').value;
-        document.getElementById('conv-message').value = '';
-
-        renderConversation();
-        output.innerHTML += `<div style="margin-bottom: 10px"><strong style="color: #2196F3">user:</strong> ${message}</div>`;
-
-        const responseDiv = document.createElement('div');
-        responseDiv.style.marginBottom = '10px';
-        responseDiv.innerHTML = `<strong style="color: #4CAF50">assistant:</strong> `;
-        output.appendChild(responseDiv);
-
-        const stream = conv.sendStream(message);
-        for await (const chunk of stream) {
-          responseDiv.innerHTML += chunk;
-          output.scrollTop = output.scrollHeight;
-        }
-      } catch (e) {
-        output.innerHTML += `<div style="color: red">Error: ${e.message}</div>`;
-      }
-    }
-
-    function clearConversation() {
-      if (currentConversation) {
-        currentConversation.clear();
-        renderConversation();
-      }
-    }
-
-    function newConversation() {
-      currentConversation = null;
-      document.getElementById('conv-output').textContent = 'Start a new conversation...';
-    }
-
-    function estimateTokensDemo() {
-      const text = document.getElementById('token-text').value;
-      const tokens = estimateTokens(text);
-      const output = document.getElementById('token-output');
-      output.textContent = `Text length: ${text.length} characters\n`;
-      output.textContent += `Estimated tokens: ${tokens}\n`;
-      output.textContent += `\nNote: This uses a simple heuristic (1 token ≈ 4 characters).\n`;
-      output.textContent += `Actual tokenization may vary by model.`;
-    }
-
-    function lookupModelInfo() {
-      const modelId = document.getElementById('model-id').value;
-      const info = getModelInfo(modelId);
-      const output = document.getElementById('model-output');
-
-      if (info) {
-        output.textContent = `Model: ${modelId}\n\n`;
-        output.textContent += `Context Length: ${info.contextLength.toLocaleString()} tokens\n\n`;
-        output.textContent += `Pricing (per million tokens):\n`;
-        output.textContent += `  Prompt: $${info.pricing.prompt.toFixed(2)}\n`;
-        output.textContent += `  Completion: $${info.pricing.completion.toFixed(2)}`;
-      } else {
-        output.textContent = `Model: ${modelId}\n\n`;
-        output.textContent += `⚠ Model not found in database.\n`;
-        output.textContent += `The library will still work with this model,\n`;
-        output.textContent += `but context length defaults to 128,000 tokens.`;
-      }
-    }
-
-    // Initialize model info on load
-    lookupModelInfo();
-  </script>
+  <!-- Demo scripts (order matters) -->
+  <script src="demo-files/test-runner.js"></script>
+  <script src="demo-files/demo.js"></script>
+  <script src="demo-files/tests.js"></script>
 </body>
 </html>
