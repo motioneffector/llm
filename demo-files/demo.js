@@ -1,3 +1,7 @@
+// Import library and expose globally for tests
+import * as Library from '../dist/index.js'
+window.Library = Library
+
 // ============================================
 // SIMULATED DATA (since this is a demo without real library calls)
 // ============================================
