@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@motioneffector/llm - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>@motioneffector/llm</h1>
+<p>Think of this library as <code>fetch</code> for LLMs. It handles the tedious parts—authentication, retries, streaming, conversation state—so you can focus on what to say, not how to say it. You describe messages, it talks to the API and gives you back responses.</p>
+<h2>I want to...</h2>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Where to go</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Get up and running quickly</td>
+<td><a href="your-first-chat.html">Your First Chat</a></td>
+</tr>
+<tr>
+<td>Send a chat message</td>
+<td><a href="guide-sending-messages.html">Sending Messages</a></td>
+</tr>
+<tr>
+<td>Stream responses in real-time</td>
+<td><a href="guide-streaming-responses.html">Streaming Responses</a></td>
+</tr>
+<tr>
+<td>Build a multi-turn conversation</td>
+<td><a href="concept-conversations.html">Conversations</a></td>
+</tr>
+<tr>
+<td>Handle errors and rate limits</td>
+<td><a href="guide-error-handling.html">Error Handling</a></td>
+</tr>
+<tr>
+<td>Look up a specific method</td>
+<td><a href="api-client.html">API Reference</a></td>
+</tr>
+</tbody></table>
+<h2>Key Concepts</h2>
+<h3>Client</h3>
+<p>The client is your configured connection to the LLM API. Create it once with your API key and model, then use it throughout your application to send messages and manage conversations.</p>
+<h3>Messages</h3>
+<p>Messages are the structured format for LLM communication. Every interaction is an array of messages with roles (system, user, assistant) and content. The model reads the full array and responds based on the conversation pattern.</p>
+<h3>Conversations</h3>
+<p>Conversations are stateful wrappers that automatically track message history. Instead of manually building message arrays for each turn, you call <code>send()</code> with new content and the conversation handles context.</p>
+<h2>Quick Example</h2>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+const response = await client.chat([
+  { role: &#39;user&#39;, content: &#39;Explain quantum computing in simple terms&#39; }
+])
+
+console.log(response.content)
+console.log(`Used ${response.usage.totalTokens} tokens in ${response.latency}ms`)
+</code></pre>
+<hr>
+<p><strong><a href="api-client.html">Full API Reference →</a></strong></p>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

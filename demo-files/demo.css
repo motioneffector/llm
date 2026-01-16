@@ -1170,3 +1170,42 @@ textarea.input {
     transform: translateX(-50%);
   }
 }
+
+/* ============================================
+   API KEY UI
+   ============================================ */
+
+.api-key-section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-alt);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+}
+
+.api-key-status {
+  font-size: var(--font-size-sm);
+  color: var(--text-warning);
+}
+
+.api-key-status.active {
+  color: var(--text-success);
+}
+
+.api-key-input {
+  flex: 1;
+  max-width: 300px;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+
+.api-key-input::placeholder {
+  color: var(--text-muted);
+}

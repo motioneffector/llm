@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversation API - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Conversation API</h1>
+<p>Methods for managing stateful conversations with automatic history tracking.</p>
+<hr>
+<h2><code>conversation.send()</code></h2>
+<p>Sends a user message and returns the assistant&#39;s response. History is updated automatically.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function send(
+  content: string,
+  options?: ChatOptions
+): Promise&lt;string&gt;
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>content</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The user&#39;s message content</td>
+</tr>
+<tr>
+<td><code>options</code></td>
+<td><code>ChatOptions</code></td>
+<td>No</td>
+<td>Request-specific options</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>Promise&lt;string&gt;</code> — The assistant&#39;s response text.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const conversation = client.createConversation()
+
+const reply = await conversation.send(&#39;What is TypeScript?&#39;)
+console.log(reply)
+</code></pre>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ConcurrencyError</code> — If another request is in progress</li>
+<li><code>ValidationError</code> — If content is invalid</li>
+<li><code>AuthError</code>, <code>RateLimitError</code>, <code>NetworkError</code> — API errors</li>
+</ul>
+<hr>
+<h2><code>conversation.sendStream()</code></h2>
+<p>Sends a user message and streams the assistant&#39;s response. History is updated after the stream completes.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function sendStream(
+  content: string,
+  options?: ChatOptions
+): AsyncIterable&lt;string&gt;
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>content</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The user&#39;s message content</td>
+</tr>
+<tr>
+<td><code>options</code></td>
+<td><code>ChatOptions</code></td>
+<td>No</td>
+<td>Request-specific options</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>AsyncIterable&lt;string&gt;</code> — An async iterable yielding response chunks.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const conversation = client.createConversation()
+
+for await (const chunk of conversation.sendStream(&#39;Tell me a story&#39;)) {
+  process.stdout.write(chunk)
+}
+</code></pre>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ConcurrencyError</code> — If another request is in progress</li>
+<li><code>ValidationError</code> — If content is invalid</li>
+</ul>
+<hr>
+<h2><code>conversation.history</code></h2>
+<p>The full message history including system prompt and all exchanges.</p>
+<p><strong>Type:</strong> <code>Message[]</code> (readonly)</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const conversation = client.createConversation({
+  system: &#39;Be helpful.&#39;
+})
+
+await conversation.send(&#39;Hello&#39;)
+
+console.log(conversation.history)
+// [
+//   { role: &#39;system&#39;, content: &#39;Be helpful.&#39; },
+//   { role: &#39;user&#39;, content: &#39;Hello&#39; },
+//   { role: &#39;assistant&#39;, content: &#39;...&#39; }
+// ]
+</code></pre>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>Returns a defensive copy; mutations don&#39;t affect internal state</li>
+<li>System prompt appears first if set</li>
+</ul>
+<hr>
+<h2><code>conversation.addMessage()</code></h2>
+<p>Manually adds a message to history without making an API call.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function addMessage(
+  role: &#39;user&#39; | &#39;assistant&#39;,
+  content: string
+): void
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>role</code></td>
+<td><code>&#39;user&#39; | &#39;assistant&#39;</code></td>
+<td>Yes</td>
+<td>The message role</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The message content</td>
+</tr>
+</tbody></table>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const conversation = client.createConversation()
+
+// Seed with prior context
+conversation.addMessage(&#39;user&#39;, &#39;My name is Alice.&#39;)
+conversation.addMessage(&#39;assistant&#39;, &#39;Nice to meet you, Alice!&#39;)
+
+// Continue naturally
+const reply = await conversation.send(&#39;What is my name?&#39;)
+</code></pre>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ConcurrencyError</code> — If a request is in progress</li>
+<li><code>ValidationError</code> — If role is <code>&#39;system&#39;</code> or invalid</li>
+<li><code>TypeError</code> — If content is not a string</li>
+</ul>
+<hr>
+<h2><code>conversation.clear()</code></h2>
+<p>Clears all messages except the system prompt.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function clear(): void
+</code></pre>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const conversation = client.createConversation({
+  system: &#39;Be helpful.&#39;
+})
+
+await conversation.send(&#39;Hello&#39;)
+await conversation.send(&#39;How are you?&#39;)
+
+conversation.clear()
+
+console.log(conversation.history)
+// [{ role: &#39;system&#39;, content: &#39;Be helpful.&#39; }]
+</code></pre>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ConcurrencyError</code> — If a request is in progress</li>
+</ul>
+<hr>
+<h2><code>conversation.clearAll()</code></h2>
+<p>Clears all messages including the system prompt.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function clearAll(): void
+</code></pre>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">conversation.clearAll()
+
+console.log(conversation.history)
+// []
+</code></pre>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ConcurrencyError</code> — If a request is in progress</li>
+</ul>
+<hr>
+<h2>Types</h2>
+<h3><code>Conversation</code></h3>
+<pre><code class="language-typescript">interface Conversation {
+  send(content: string, options?: ChatOptions): Promise&lt;string&gt;
+  sendStream(content: string, options?: ChatOptions): AsyncIterable&lt;string&gt;
+  history: Message[]
+  addMessage(role: &#39;user&#39; | &#39;assistant&#39;, content: string): void
+  clear(): void
+  clearAll(): void
+}
+</code></pre>
+<h3><code>ConversationOptions</code></h3>
+<pre><code class="language-typescript">interface ConversationOptions {
+  system?: string
+  initialMessages?: Message[]
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>system</code></td>
+<td><code>string</code></td>
+<td>No</td>
+<td>System prompt to guide model behavior</td>
+</tr>
+<tr>
+<td><code>initialMessages</code></td>
+<td><code>Message[]</code></td>
+<td>No</td>
+<td>Pre-populated message history</td>
+</tr>
+</tbody></table>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

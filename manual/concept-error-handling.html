@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error Handling - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Error Handling</h1>
+<p>The library throws typed errors for different failure modes. You can catch specific error types to handle them appropriately—retry on rate limits, re-authenticate on auth errors, or show user-friendly messages for network issues.</p>
+<h2>How It Works</h2>
+<p>All errors extend the base <code>LLMError</code> class. When something goes wrong, the library throws a specific error type based on the cause:</p>
+<pre><code>LLMError (base class)
+├── ValidationError   - Invalid input (bad params, empty messages)
+├── AuthError         - Authentication failed (401, 403)
+├── RateLimitError    - Too many requests (429)
+├── ModelError        - Model unavailable (404)
+├── ServerError       - API server error (5xx)
+├── NetworkError      - Connection failed
+├── ParseError        - Invalid response format
+└── ConcurrencyError  - Concurrent operation conflict
+</code></pre>
+<p>Catch specific types to handle them differently:</p>
+<pre><code class="language-typescript">try {
+  await client.chat(messages)
+} catch (error) {
+  if (error instanceof RateLimitError) {
+    // Wait and retry
+  } else if (error instanceof AuthError) {
+    // Re-authenticate
+  } else {
+    // Generic error handling
+  }
+}
+</code></pre>
+<h2>Basic Usage</h2>
+<pre><code class="language-typescript">import {
+  createLLMClient,
+  RateLimitError,
+  AuthError,
+  NetworkError
+} from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+try {
+  const response = await client.chat([
+    { role: &#39;user&#39;, content: &#39;Hello&#39; }
+  ])
+  console.log(response.content)
+} catch (error) {
+  if (error instanceof RateLimitError) {
+    console.log(`Rate limited. Retry after ${error.retryAfter} seconds`)
+  } else if (error instanceof AuthError) {
+    console.log(&#39;Invalid API key&#39;)
+  } else if (error instanceof NetworkError) {
+    console.log(&#39;Network connection failed&#39;)
+  } else {
+    throw error
+  }
+}
+</code></pre>
+<h2>Key Points</h2>
+<ul>
+<li><strong>Automatic retries built-in</strong> - The client automatically retries on rate limits and server errors (configurable).</li>
+<li><strong>RateLimitError includes timing</strong> - The <code>retryAfter</code> property tells you how long to wait.</li>
+<li><strong>ValidationError happens before requests</strong> - Invalid parameters throw immediately, no API call made.</li>
+<li><strong>NetworkError wraps connection issues</strong> - Timeouts, DNS failures, connection refused.</li>
+<li><strong>ConcurrencyError is conversation-specific</strong> - Thrown when you try concurrent operations on a conversation.</li>
+</ul>
+<h2>Examples</h2>
+<h3>Rate Limit Handling</h3>
+<p>Respect the server&#39;s backoff timing:</p>
+<pre><code class="language-typescript">async function chatWithBackoff(messages: Message[]): Promise&lt;string&gt; {
+  try {
+    const response = await client.chat(messages)
+    return response.content
+  } catch (error) {
+    if (error instanceof RateLimitError &amp;&amp; error.retryAfter) {
+      console.log(`Rate limited. Waiting ${error.retryAfter}s...`)
+      await new Promise(r =&gt; setTimeout(r, error.retryAfter! * 1000))
+      return chatWithBackoff(messages)
+    }
+    throw error
+  }
+}
+</code></pre>
+<h3>Disabling Automatic Retries</h3>
+<p>Sometimes you want to handle retries yourself:</p>
+<pre><code class="language-typescript">const response = await client.chat(messages, {
+  retry: false
+})
+</code></pre>
+<h3>Customizing Retry Count</h3>
+<p>Increase or decrease retry attempts:</p>
+<pre><code class="language-typescript">const response = await client.chat(messages, {
+  maxRetries: 5  // Default is 3
+})
+</code></pre>
+<h3>Validation Errors</h3>
+<p>Catch invalid input before it reaches the API:</p>
+<pre><code class="language-typescript">import { ValidationError } from &#39;@motioneffector/llm&#39;
+
+try {
+  await client.chat([])  // Empty messages
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.log(`Invalid: ${error.message}`)
+    console.log(`Field: ${error.field}`)  // &#39;messages&#39;
+  }
+}
+</code></pre>
+<h2>Related</h2>
+<ul>
+<li><strong><a href="guide-error-handling.html">Error Handling</a></strong> - Complete guide with patterns</li>
+<li><strong><a href="api-errors.html">Errors API</a></strong> - Full reference for all error types</li>
+<li><strong><a href="api-client.html">Client API</a></strong> - Retry options documentation</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

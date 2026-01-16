@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error Handling - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Error Handling</h1>
+<p>Handle API errors gracefully in production. This guide covers error types, retry strategies, and recovery patterns.</p>
+<h2>Prerequisites</h2>
+<p>Before starting, you should:</p>
+<ul>
+<li>Know the basics of <a href="guide-sending-messages.html">sending messages</a></li>
+<li>Understand JavaScript try/catch and error handling</li>
+</ul>
+<h2>Overview</h2>
+<p>We&#39;ll handle errors by:</p>
+<ol>
+<li>Understanding the error hierarchy</li>
+<li>Catching specific error types</li>
+<li>Implementing appropriate recovery</li>
+<li>Configuring retry behavior</li>
+</ol>
+<h2>Step 1: Import Error Types</h2>
+<p>Import the specific error types you want to handle:</p>
+<pre><code class="language-typescript">import {
+  createLLMClient,
+  RateLimitError,
+  AuthError,
+  NetworkError,
+  ValidationError,
+  ModelError,
+  ServerError
+} from &#39;@motioneffector/llm&#39;
+</code></pre>
+<h2>Step 2: Wrap Requests in Try/Catch</h2>
+<p>Catch errors and check their type:</p>
+<pre><code class="language-typescript">const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+try {
+  const response = await client.chat([
+    { role: &#39;user&#39;, content: &#39;Hello&#39; }
+  ])
+  console.log(response.content)
+} catch (error) {
+  if (error instanceof RateLimitError) {
+    // Handle rate limiting
+  } else if (error instanceof AuthError) {
+    // Handle authentication failure
+  } else {
+    throw error
+  }
+}
+</code></pre>
+<h2>Step 3: Handle Each Error Type</h2>
+<p>Implement appropriate handling for each error:</p>
+<pre><code class="language-typescript">try {
+  const response = await client.chat(messages)
+  return response.content
+} catch (error) {
+  if (error instanceof RateLimitError) {
+    console.log(`Rate limited. Retry after ${error.retryAfter ?? 60} seconds`)
+    // Queue for later or show user a message
+  } else if (error instanceof AuthError) {
+    console.log(&#39;Authentication failed. Check your API key.&#39;)
+    // Prompt for new credentials
+  } else if (error instanceof NetworkError) {
+    console.log(&#39;Network error. Check your connection.&#39;)
+    // Retry or show offline state
+  } else if (error instanceof ModelError) {
+    console.log(&#39;Model unavailable. Try a different model.&#39;)
+    // Fall back to alternative model
+  } else if (error instanceof ValidationError) {
+    console.log(`Invalid input: ${error.message}`)
+    // Fix the input and retry
+  } else {
+    console.log(&#39;Unexpected error:&#39;, error)
+    throw error
+  }
+}
+</code></pre>
+<h2>Complete Example</h2>
+<pre><code class="language-typescript">import {
+  createLLMClient,
+  RateLimitError,
+  AuthError,
+  NetworkError,
+  ModelError,
+  ValidationError,
+  LLMError,
+  type Message
+} from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+async function sendWithErrorHandling(messages: Message[]): Promise&lt;string&gt; {
+  try {
+    const response = await client.chat(messages)
+    return response.content
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      throw new Error(`Invalid request: ${error.message}`)
+    }
+
+    if (error instanceof AuthError) {
+      throw new Error(&#39;API key is invalid or expired&#39;)
+    }
+
+    if (error instanceof RateLimitError) {
+      const wait = error.retryAfter ?? 60
+      throw new Error(`Rate limited. Try again in ${wait} seconds`)
+    }
+
+    if (error instanceof ModelError) {
+      throw new Error(&#39;Model is unavailable. Try a different model&#39;)
+    }
+
+    if (error instanceof NetworkError) {
+      throw new Error(&#39;Network connection failed. Check your internet&#39;)
+    }
+
+    if (error instanceof LLMError) {
+      throw new Error(`API error: ${error.message}`)
+    }
+
+    throw error
+  }
+}
+
+// Usage
+try {
+  const reply = await sendWithErrorHandling([
+    { role: &#39;user&#39;, content: &#39;Hello!&#39; }
+  ])
+  console.log(reply)
+} catch (error) {
+  console.error((error as Error).message)
+}
+</code></pre>
+<h2>Variations</h2>
+<h3>Manual Retry with Backoff</h3>
+<p>Implement custom retry logic for rate limits:</p>
+<pre><code class="language-typescript">async function chatWithRetry(
+  messages: Message[],
+  maxAttempts = 3
+): Promise&lt;string&gt; {
+  for (let attempt = 0; attempt &lt; maxAttempts; attempt++) {
+    try {
+      const response = await client.chat(messages)
+      return response.content
+    } catch (error) {
+      if (error instanceof RateLimitError &amp;&amp; attempt &lt; maxAttempts - 1) {
+        const delay = error.retryAfter ?? Math.pow(2, attempt) * 1000
+        console.log(`Rate limited. Waiting ${delay}ms...`)
+        await new Promise(r =&gt; setTimeout(r, delay))
+        continue
+      }
+      throw error
+    }
+  }
+  throw new Error(&#39;Max retries exceeded&#39;)
+}
+</code></pre>
+<h3>Disable Built-in Retries</h3>
+<p>Handle all retries yourself:</p>
+<pre><code class="language-typescript">const response = await client.chat(messages, {
+  retry: false
+})
+</code></pre>
+<h3>Custom Retry Count</h3>
+<p>Adjust the number of automatic retries:</p>
+<pre><code class="language-typescript">const response = await client.chat(messages, {
+  maxRetries: 5  // Default is 3
+})
+</code></pre>
+<h3>Fallback Model</h3>
+<p>Switch to a backup model on failure:</p>
+<pre><code class="language-typescript">async function chatWithFallback(messages: Message[]): Promise&lt;string&gt; {
+  try {
+    const response = await client.chat(messages)
+    return response.content
+  } catch (error) {
+    if (error instanceof ModelError) {
+      console.log(&#39;Primary model unavailable, trying fallback...&#39;)
+      const response = await client.chat(messages, {
+        model: &#39;openai/gpt-4o&#39;
+      })
+      return response.content
+    }
+    throw error
+  }
+}
+</code></pre>
+<h3>Logging Errors</h3>
+<p>Log errors for debugging while still handling them:</p>
+<pre><code class="language-typescript">try {
+  const response = await client.chat(messages)
+  return response.content
+} catch (error) {
+  if (error instanceof LLMError) {
+    console.error(&#39;[LLM Error]&#39;, {
+      type: error.name,
+      message: error.message,
+      ...(error instanceof RateLimitError &amp;&amp; { retryAfter: error.retryAfter }),
+      ...(error instanceof AuthError &amp;&amp; { status: error.status })
+    })
+  }
+  throw error
+}
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>Error Type Not Matching</h3>
+<p><strong>Symptom:</strong> <code>error instanceof RateLimitError</code> is always false.</p>
+<p><strong>Cause:</strong> Importing from wrong location or bundler issues.</p>
+<p><strong>Solution:</strong> Import directly from <code>@motioneffector/llm</code>:</p>
+<pre><code class="language-typescript">import { RateLimitError } from &#39;@motioneffector/llm&#39;
+</code></pre>
+<h3>Retries Not Working</h3>
+<p><strong>Symptom:</strong> Requests fail immediately without retrying.</p>
+<p><strong>Cause:</strong> Non-retriable error (auth, validation) or retries disabled.</p>
+<p><strong>Solution:</strong> Check error type. Only rate limits (429) and server errors (5xx) are retried automatically.</p>
+<h3>Missing retryAfter</h3>
+<p><strong>Symptom:</strong> <code>error.retryAfter</code> is undefined.</p>
+<p><strong>Cause:</strong> Server didn&#39;t include Retry-After header.</p>
+<p><strong>Solution:</strong> Use a default value:</p>
+<pre><code class="language-typescript">const delay = error.retryAfter ?? 60
+</code></pre>
+<h2>See Also</h2>
+<ul>
+<li><strong><a href="concept-error-handling.html">Error Handling</a></strong> - Error hierarchy and types</li>
+<li><strong><a href="api-errors.html">Errors API</a></strong> - Full error class reference</li>
+<li><strong><a href="api-client.html">Client API</a></strong> - Retry options documentation</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

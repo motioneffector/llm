@@ -18,7 +18,7 @@
         <a href="https://github.com/motioneffector/llm" class="header-link" target="_blank">
           💻 GitHub
         </a>
-        <a href="https://github.com/motioneffector/llm/wiki" class="header-link" target="_blank">
+        <a href="manual/index.html" class="header-link">
           📖 Manual
         </a>
         <span class="simulated-badge">🔶 SIMULATED</span>
@@ -260,13 +260,12 @@
     // Simulated library for demo purposes
     window.Library = {
       // This is a simulated placeholder
-      // In production, this would be: import * as Library from './dist/index.js'
     }
   </script>
 
   <!-- Demo scripts (order matters) -->
   <script src="demo-files/test-runner.js"></script>
-  <script src="demo-files/demo.js"></script>
-  <script src="demo-files/tests.js"></script>
+  <script type="module" src="demo-files/demo.js"></script>
+  <script type="module" src="demo-files/tests.js"></script>
 </body>
 </html>

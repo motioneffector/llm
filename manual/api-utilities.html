@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Utilities - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Utilities</h1>
+<p>Helper functions for model information and token estimation.</p>
+<hr>
+<h2><code>getModelInfo()</code></h2>
+<p>Retrieves information about a specific model&#39;s capabilities and pricing.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function getModelInfo(modelId: string): ModelInfo | undefined
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>modelId</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The model identifier (e.g., <code>&#39;anthropic/claude-sonnet-4&#39;</code>)</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>ModelInfo | undefined</code> — Model information if found, undefined otherwise.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { getModelInfo } from &#39;@motioneffector/llm&#39;
+
+const info = getModelInfo(&#39;anthropic/claude-sonnet-4&#39;)
+
+if (info) {
+  console.log(`Context: ${info.contextLength} tokens`)
+  console.log(`Prompt cost: ${info.pricing.prompt}/M tokens`)
+  console.log(`Completion cost: ${info.pricing.completion}/M tokens`)
+}
+</code></pre>
+<p><strong>Available Models:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Model ID</th>
+<th>Context Length</th>
+<th>Prompt $/M</th>
+<th>Completion $/M</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>anthropic/claude-sonnet-4</code></td>
+<td>200,000</td>
+<td>$3.00</td>
+<td>$15.00</td>
+</tr>
+<tr>
+<td><code>anthropic/claude-3-opus</code></td>
+<td>200,000</td>
+<td>$15.00</td>
+<td>$75.00</td>
+</tr>
+<tr>
+<td><code>openai/gpt-4o</code></td>
+<td>128,000</td>
+<td>$5.00</td>
+<td>$15.00</td>
+</tr>
+<tr>
+<td><code>openai/gpt-4-turbo</code></td>
+<td>128,000</td>
+<td>$10.00</td>
+<td>$30.00</td>
+</tr>
+<tr>
+<td><code>meta-llama/llama-3.1-405b</code></td>
+<td>128,000</td>
+<td>$3.00</td>
+<td>$3.00</td>
+</tr>
+</tbody></table>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>Returns <code>undefined</code> for unknown models</li>
+<li>Pricing is in USD per million tokens</li>
+<li>Data may not reflect current API pricing; check provider for latest rates</li>
+</ul>
+<hr>
+<h2><code>estimateTokens()</code></h2>
+<p>Estimates the number of tokens in a text string.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function estimateTokens(text: string): number
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>text</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The text to estimate tokens for</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>number</code> — Estimated token count.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { estimateTokens } from &#39;@motioneffector/llm&#39;
+
+const text = &#39;Hello, world! How are you doing today?&#39;
+const tokens = estimateTokens(text)
+
+console.log(`Estimated tokens: ${tokens}`)
+// Estimated tokens: 10
+</code></pre>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>Uses a simple heuristic: 1 token ≈ 4 characters</li>
+<li>This is an approximation; actual tokenization varies by model</li>
+<li>Empty strings return 0</li>
+<li>Useful for rough estimates before sending requests</li>
+</ul>
+<p><strong>Example with messages:</strong></p>
+<pre><code class="language-typescript">import { estimateTokens } from &#39;@motioneffector/llm&#39;
+
+const messages = [
+  { role: &#39;system&#39;, content: &#39;You are a helpful assistant.&#39; },
+  { role: &#39;user&#39;, content: &#39;Explain quantum computing.&#39; }
+]
+
+let totalTokens = 0
+for (const message of messages) {
+  totalTokens += estimateTokens(message.content)
+  totalTokens += 3  // Overhead per message
+}
+
+console.log(`Estimated prompt tokens: ${totalTokens}`)
+</code></pre>
+<hr>
+<h2>Types</h2>
+<h3><code>ModelInfo</code></h3>
+<pre><code class="language-typescript">interface ModelInfo {
+  contextLength: number
+  pricing: {
+    prompt: number
+    completion: number
+  }
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>contextLength</code></td>
+<td><code>number</code></td>
+<td>Maximum tokens the model can process</td>
+</tr>
+<tr>
+<td><code>pricing.prompt</code></td>
+<td><code>number</code></td>
+<td>Cost per million prompt tokens (USD)</td>
+</tr>
+<tr>
+<td><code>pricing.completion</code></td>
+<td><code>number</code></td>
+<td>Cost per million completion tokens (USD)</td>
+</tr>
+</tbody></table>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

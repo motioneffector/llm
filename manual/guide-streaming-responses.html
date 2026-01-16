@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streaming Responses - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Streaming Responses</h1>
+<p>Display LLM output in real-time as it&#39;s generated. Streaming creates a more responsive experience by showing text progressively instead of waiting for the complete response.</p>
+<h2>Prerequisites</h2>
+<p>Before starting, you should:</p>
+<ul>
+<li>Understand <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of">async iterators</a></li>
+<li>Know the basics of <a href="guide-sending-messages.html">sending messages</a></li>
+</ul>
+<h2>Overview</h2>
+<p>We&#39;ll stream a response by:</p>
+<ol>
+<li>Calling <code>stream()</code> instead of <code>chat()</code></li>
+<li>Iterating with <code>for await...of</code></li>
+<li>Outputting each chunk immediately</li>
+<li>Handling stream completion</li>
+</ol>
+<h2>Step 1: Create the Stream</h2>
+<p>Call <code>stream()</code> with your messages. This returns an async iterable, not a promise.</p>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+const stream = client.stream([
+  { role: &#39;user&#39;, content: &#39;Write a short poem about coding&#39; }
+])
+</code></pre>
+<h2>Step 2: Iterate Over Chunks</h2>
+<p>Use <code>for await...of</code> to consume the stream. Each iteration yields a text chunk.</p>
+<pre><code class="language-typescript">for await (const chunk of stream) {
+  process.stdout.write(chunk)
+}
+</code></pre>
+<p>Use <code>process.stdout.write()</code> instead of <code>console.log()</code> to avoid newlines between chunks.</p>
+<h2>Step 3: Handle Completion</h2>
+<p>The loop ends when the stream is done. Add any cleanup or final output:</p>
+<pre><code class="language-typescript">for await (const chunk of stream) {
+  process.stdout.write(chunk)
+}
+
+console.log() // Final newline
+console.log(&#39;Done!&#39;)
+</code></pre>
+<h2>Complete Example</h2>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+const stream = client.stream([
+  { role: &#39;user&#39;, content: &#39;Explain how async/await works in JavaScript&#39; }
+])
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk)
+}
+
+console.log()
+</code></pre>
+<h2>Variations</h2>
+<h3>Collecting the Full Response</h3>
+<p>Build the complete text while streaming:</p>
+<pre><code class="language-typescript">const stream = client.stream([
+  { role: &#39;user&#39;, content: &#39;Write a haiku&#39; }
+])
+
+let fullResponse = &#39;&#39;
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk)
+  fullResponse += chunk
+}
+
+console.log(`\n\nFull response (${fullResponse.length} chars):`)
+console.log(fullResponse)
+</code></pre>
+<h3>With Generation Options</h3>
+<p>All options from <code>chat()</code> work with <code>stream()</code>:</p>
+<pre><code class="language-typescript">const stream = client.stream(
+  [{ role: &#39;user&#39;, content: &#39;Write a story&#39; }],
+  {
+    temperature: 0.9,
+    maxTokens: 500,
+    model: &#39;openai/gpt-4o&#39;
+  }
+)
+</code></pre>
+<h3>Browser Display</h3>
+<p>Update a DOM element progressively:</p>
+<pre><code class="language-typescript">const outputEl = document.getElementById(&#39;output&#39;)!
+
+const stream = client.stream([
+  { role: &#39;user&#39;, content: &#39;Explain quantum computing&#39; }
+])
+
+for await (const chunk of stream) {
+  outputEl.textContent += chunk
+}
+</code></pre>
+<h3>Streaming in Conversations</h3>
+<p>Conversations support streaming with <code>sendStream()</code>:</p>
+<pre><code class="language-typescript">const conversation = client.createConversation({
+  system: &#39;Be helpful.&#39;
+})
+
+for await (const chunk of conversation.sendStream(&#39;Tell me a joke&#39;)) {
+  process.stdout.write(chunk)
+}
+
+// History is updated after stream completes
+console.log(conversation.history)
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>Stream Stops Unexpectedly</h3>
+<p><strong>Symptom:</strong> Output ends mid-sentence.</p>
+<p><strong>Cause:</strong> Usually <code>maxTokens</code> limit reached.</p>
+<p><strong>Solution:</strong> Increase <code>maxTokens</code> in options, or don&#39;t set it to use the model&#39;s default.</p>
+<h3>No Output Appears</h3>
+<p><strong>Symptom:</strong> Loop runs but nothing displays.</p>
+<p><strong>Cause:</strong> Using <code>console.log()</code> with empty chunks or buffering issues.</p>
+<p><strong>Solution:</strong> Use <code>process.stdout.write()</code> and ensure you&#39;re actually in the loop (add a counter).</p>
+<h3>AbortError on Cancel</h3>
+<p><strong>Symptom:</strong> <code>AbortError</code> thrown when canceling.</p>
+<p><strong>Cause:</strong> This is expected behavior when aborting a stream.</p>
+<p><strong>Solution:</strong> Catch the error if you need to handle cancellation gracefully. See <a href="guide-canceling-requests.html">Canceling Requests</a>.</p>
+<h2>See Also</h2>
+<ul>
+<li><strong><a href="guide-canceling-requests.html">Canceling Requests</a></strong> - Stop streams mid-generation</li>
+<li><strong><a href="concept-streaming.html">Streaming</a></strong> - How streaming works</li>
+<li><strong><a href="guide-building-conversations.html">Building Conversations</a></strong> - Using <code>sendStream()</code></li>
+<li><strong><a href="api-client.html">Client API</a></strong> - Full <code>stream()</code> reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

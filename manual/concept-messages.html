@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Messages</h1>
+<p>Messages are the structured format for communicating with LLMs. Every interaction is an array of messages, each with a role and content. The model reads the entire array as context and generates a response based on the conversation pattern.</p>
+<h2>How It Works</h2>
+<p>An LLM doesn&#39;t remember previous requests. Each API call includes the full conversation history as an array of messages. The model sees this array, understands the flow, and generates the next response.</p>
+<pre><code>Request 1: [user: &quot;Hi&quot;]           → Response: &quot;Hello!&quot;
+Request 2: [user: &quot;Hi&quot;,
+            assistant: &quot;Hello!&quot;,
+            user: &quot;How are you?&quot;] → Response: &quot;I&#39;m doing well!&quot;
+</code></pre>
+<p>Messages have three roles:</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>system</code></td>
+<td>Sets the model&#39;s behavior, persona, or instructions. Usually first.</td>
+</tr>
+<tr>
+<td><code>user</code></td>
+<td>Your input—questions, commands, content to process.</td>
+</tr>
+<tr>
+<td><code>assistant</code></td>
+<td>The model&#39;s previous responses. Included for context.</td>
+</tr>
+</tbody></table>
+<h2>Basic Usage</h2>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+const response = await client.chat([
+  { role: &#39;system&#39;, content: &#39;You are a helpful coding assistant.&#39; },
+  { role: &#39;user&#39;, content: &#39;How do I read a file in Node.js?&#39; }
+])
+</code></pre>
+<p>The model sees the system instruction and the user question, then responds as a coding assistant.</p>
+<h2>Key Points</h2>
+<ul>
+<li><strong>Order matters</strong> - System message first, then user/assistant messages in conversation order.</li>
+<li><strong>Content is always a string</strong> - No objects, no arrays, just text.</li>
+<li><strong>Build the array yourself</strong> - For simple requests, you construct the array. For multi-turn conversations, use <a href="concept-conversations.html">Conversations</a> to manage history automatically.</li>
+<li><strong>Assistant messages are context</strong> - When continuing a conversation, include previous assistant responses so the model knows what it already said.</li>
+</ul>
+<h2>Examples</h2>
+<h3>Simple Question</h3>
+<p>A single user message is the simplest case:</p>
+<pre><code class="language-typescript">const response = await client.chat([
+  { role: &#39;user&#39;, content: &#39;What is TypeScript?&#39; }
+])
+</code></pre>
+<h3>With System Prompt</h3>
+<p>Add a system message to control behavior:</p>
+<pre><code class="language-typescript">const response = await client.chat([
+  { role: &#39;system&#39;, content: &#39;Respond in exactly one sentence.&#39; },
+  { role: &#39;user&#39;, content: &#39;Explain quantum computing.&#39; }
+])
+</code></pre>
+<h3>Multi-Turn Conversation</h3>
+<p>Include previous exchanges for context:</p>
+<pre><code class="language-typescript">const response = await client.chat([
+  { role: &#39;system&#39;, content: &#39;You are a helpful assistant.&#39; },
+  { role: &#39;user&#39;, content: &#39;What is the capital of France?&#39; },
+  { role: &#39;assistant&#39;, content: &#39;The capital of France is Paris.&#39; },
+  { role: &#39;user&#39;, content: &#39;What is its population?&#39; }
+])
+// Model knows &quot;its&quot; refers to Paris
+</code></pre>
+<h2>Related</h2>
+<ul>
+<li><strong><a href="concept-client.html">Client</a></strong> - Where messages are sent</li>
+<li><strong><a href="concept-conversations.html">Conversations</a></strong> - Automatic history management for multi-turn chats</li>
+<li><strong><a href="guide-sending-messages.html">Sending Messages</a></strong> - Complete guide with all options</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

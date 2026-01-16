@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Errors - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Errors</h1>
+<p>Error classes for handling different failure modes. All errors extend the base <code>LLMError</code> class.</p>
+<hr>
+<h2>Error Hierarchy</h2>
+<pre><code>LLMError (base)
+├── ValidationError
+├── AuthError
+├── RateLimitError
+├── ModelError
+├── ServerError
+├── NetworkError
+├── ParseError
+└── ConcurrencyError
+</code></pre>
+<hr>
+<h2><code>LLMError</code></h2>
+<p>Base class for all library errors.</p>
+<pre><code class="language-typescript">class LLMError extends Error {
+  name: &#39;LLMError&#39;
+  message: string
+}
+</code></pre>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { LLMError } from &#39;@motioneffector/llm&#39;
+
+try {
+  await client.chat(messages)
+} catch (error) {
+  if (error instanceof LLMError) {
+    console.log(&#39;LLM-related error:&#39;, error.message)
+  }
+}
+</code></pre>
+<hr>
+<h2><code>ValidationError</code></h2>
+<p>Thrown when input validation fails. Catches invalid parameters before making API requests.</p>
+<pre><code class="language-typescript">class ValidationError extends LLMError {
+  name: &#39;ValidationError&#39;
+  field?: string
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>field</code></td>
+<td><code>string | undefined</code></td>
+<td>The invalid field name</td>
+</tr>
+</tbody></table>
+<p><strong>Thrown when:</strong></p>
+<ul>
+<li>Messages array is empty</li>
+<li>Message has invalid role</li>
+<li>Message content is not a string</li>
+<li>Temperature is outside 0-2 range</li>
+<li>API key or model is empty</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { ValidationError } from &#39;@motioneffector/llm&#39;
+
+try {
+  await client.chat([])
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.log(`Invalid ${error.field}: ${error.message}`)
+  }
+}
+</code></pre>
+<hr>
+<h2><code>AuthError</code></h2>
+<p>Thrown when authentication fails.</p>
+<pre><code class="language-typescript">class AuthError extends LLMError {
+  name: &#39;AuthError&#39;
+  status: number
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>status</code></td>
+<td><code>number</code></td>
+<td>HTTP status code (401 or 403)</td>
+</tr>
+</tbody></table>
+<p><strong>Thrown when:</strong></p>
+<ul>
+<li>API key is invalid (401)</li>
+<li>API key lacks permission (403)</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { AuthError } from &#39;@motioneffector/llm&#39;
+
+try {
+  await client.chat(messages)
+} catch (error) {
+  if (error instanceof AuthError) {
+    console.log(`Auth failed (${error.status}): ${error.message}`)
+  }
+}
+</code></pre>
+<hr>
+<h2><code>RateLimitError</code></h2>
+<p>Thrown when rate limit is exceeded.</p>
+<pre><code class="language-typescript">class RateLimitError extends LLMError {
+  name: &#39;RateLimitError&#39;
+  status: number
+  retryAfter?: number
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>status</code></td>
+<td><code>number</code></td>
+<td>HTTP status code (429)</td>
+</tr>
+<tr>
+<td><code>retryAfter</code></td>
+<td><code>number | undefined</code></td>
+<td>Seconds to wait before retrying</td>
+</tr>
+</tbody></table>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>Automatic retries are attempted before this error is thrown</li>
+<li><code>retryAfter</code> comes from the Retry-After header if provided</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { RateLimitError } from &#39;@motioneffector/llm&#39;
+
+try {
+  await client.chat(messages)
+} catch (error) {
+  if (error instanceof RateLimitError) {
+    const wait = error.retryAfter ?? 60
+    console.log(`Rate limited. Retry in ${wait} seconds`)
+  }
+}
+</code></pre>
+<hr>
+<h2><code>ModelError</code></h2>
+<p>Thrown when the requested model is unavailable.</p>
+<pre><code class="language-typescript">class ModelError extends LLMError {
+  name: &#39;ModelError&#39;
+  status: number
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>status</code></td>
+<td><code>number</code></td>
+<td>HTTP status code (404)</td>
+</tr>
+</tbody></table>
+<p><strong>Thrown when:</strong></p>
+<ul>
+<li>Model doesn&#39;t exist</li>
+<li>Model is temporarily unavailable</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { ModelError } from &#39;@motioneffector/llm&#39;
+
+try {
+  await client.chat(messages)
+} catch (error) {
+  if (error instanceof ModelError) {
+    console.log(&#39;Model unavailable:&#39;, error.message)
+  }
+}
+</code></pre>
+<hr>
+<h2><code>ServerError</code></h2>
+<p>Thrown when the API server returns an error.</p>
+<pre><code class="language-typescript">class ServerError extends LLMError {
+  name: &#39;ServerError&#39;
+  status: number
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>status</code></td>
+<td><code>number</code></td>
+<td>HTTP status code (5xx)</td>
+</tr>
+</tbody></table>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>Automatic retries are attempted for 5xx errors before this is thrown</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { ServerError } from &#39;@motioneffector/llm&#39;
+
+try {
+  await client.chat(messages)
+} catch (error) {
+  if (error instanceof ServerError) {
+    console.log(`Server error (${error.status}): ${error.message}`)
+  }
+}
+</code></pre>
+<hr>
+<h2><code>NetworkError</code></h2>
+<p>Thrown when network request fails.</p>
+<pre><code class="language-typescript">class NetworkError extends LLMError {
+  name: &#39;NetworkError&#39;
+  cause?: Error
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cause</code></td>
+<td><code>Error | undefined</code></td>
+<td>The underlying error</td>
+</tr>
+</tbody></table>
+<p><strong>Thrown when:</strong></p>
+<ul>
+<li>Connection refused</li>
+<li>DNS lookup failed</li>
+<li>Request timeout</li>
+<li>Network unreachable</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { NetworkError } from &#39;@motioneffector/llm&#39;
+
+try {
+  await client.chat(messages)
+} catch (error) {
+  if (error instanceof NetworkError) {
+    console.log(&#39;Network failed:&#39;, error.message)
+    if (error.cause) {
+      console.log(&#39;Caused by:&#39;, error.cause.message)
+    }
+  }
+}
+</code></pre>
+<hr>
+<h2><code>ParseError</code></h2>
+<p>Thrown when response parsing fails.</p>
+<pre><code class="language-typescript">class ParseError extends LLMError {
+  name: &#39;ParseError&#39;
+  cause?: Error
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cause</code></td>
+<td><code>Error | undefined</code></td>
+<td>The underlying error</td>
+</tr>
+</tbody></table>
+<p><strong>Thrown when:</strong></p>
+<ul>
+<li>Response is not valid JSON</li>
+<li>Response missing expected fields</li>
+<li>Streaming chunk is malformed</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { ParseError } from &#39;@motioneffector/llm&#39;
+
+try {
+  await client.chat(messages)
+} catch (error) {
+  if (error instanceof ParseError) {
+    console.log(&#39;Failed to parse response:&#39;, error.message)
+  }
+}
+</code></pre>
+<hr>
+<h2><code>ConcurrencyError</code></h2>
+<p>Thrown when attempting concurrent operations on a conversation.</p>
+<pre><code class="language-typescript">class ConcurrencyError extends LLMError {
+  name: &#39;ConcurrencyError&#39;
+}
+</code></pre>
+<p><strong>Thrown when:</strong></p>
+<ul>
+<li>Calling <code>send()</code> while another <code>send()</code> is pending</li>
+<li>Calling <code>sendStream()</code> while a request is in progress</li>
+<li>Calling <code>addMessage()</code>, <code>clear()</code>, or <code>clearAll()</code> during a request</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { ConcurrencyError } from &#39;@motioneffector/llm&#39;
+
+try {
+  // Don&#39;t do this
+  conversation.send(&#39;First&#39;)  // Not awaited
+  await conversation.send(&#39;Second&#39;)  // Throws ConcurrencyError
+} catch (error) {
+  if (error instanceof ConcurrencyError) {
+    console.log(&#39;Wait for the previous request to complete&#39;)
+  }
+}
+</code></pre>
+<hr>
+<h2>Importing Errors</h2>
+<p>Import individual error types or the base class:</p>
+<pre><code class="language-typescript">// Individual errors
+import {
+  LLMError,
+  ValidationError,
+  RateLimitError,
+  AuthError,
+  ModelError,
+  ServerError,
+  NetworkError,
+  ParseError,
+  ConcurrencyError
+} from &#39;@motioneffector/llm&#39;
+
+// Check against base class
+if (error instanceof LLMError) {
+  // It&#39;s one of ours
+}
+
+// Check specific types
+if (error instanceof RateLimitError) {
+  // Handle rate limiting
+}
+</code></pre>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

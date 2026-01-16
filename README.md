@@ -19,7 +19,7 @@ A TypeScript client for LLM APIs with OpenRouter support, streaming responses, c
 - **Model Information** - Built-in pricing and context length data
 - **Abort Support** - Cancel requests using AbortController signals
 
-[Read the full manual →](https://github.com/motioneffector/llm/wiki)
+[Read the full manual →](https://motioneffector.github.io/llm/manual/)
 
 ## Quick Start
 

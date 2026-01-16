@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client API - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Client API</h1>
+<p>The main client interface for sending chat requests, streaming responses, and managing conversations.</p>
+<hr>
+<h2><code>createLLMClient()</code></h2>
+<p>Creates a new LLM client instance configured with your credentials and defaults.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function createLLMClient(options: ClientOptions): LLMClient
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>options</code></td>
+<td><code>ClientOptions</code></td>
+<td>Yes</td>
+<td>Configuration options for the client</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>LLMClient</code> — A client instance with chat, stream, and conversation methods.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+</code></pre>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ValidationError</code> — If <code>apiKey</code> or <code>model</code> is missing or empty</li>
+</ul>
+<hr>
+<h2><code>client.chat()</code></h2>
+<p>Sends a chat completion request and waits for the full response.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function chat(
+  messages: Message[],
+  options?: ChatOptions
+): Promise&lt;ChatResponse&gt;
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>messages</code></td>
+<td><code>Message[]</code></td>
+<td>Yes</td>
+<td>Array of messages forming the conversation</td>
+</tr>
+<tr>
+<td><code>options</code></td>
+<td><code>ChatOptions</code></td>
+<td>No</td>
+<td>Request-specific options</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>Promise&lt;ChatResponse&gt;</code> — The complete response with content, usage, and metadata.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const response = await client.chat([
+  { role: &#39;user&#39;, content: &#39;Hello!&#39; }
+])
+
+console.log(response.content)
+console.log(response.usage.totalTokens)
+</code></pre>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ValidationError</code> — If messages array is empty or contains invalid messages</li>
+<li><code>AuthError</code> — If API key is invalid (401, 403)</li>
+<li><code>RateLimitError</code> — If rate limit exceeded (429)</li>
+<li><code>ModelError</code> — If model is unavailable (404)</li>
+<li><code>NetworkError</code> — If network request fails</li>
+</ul>
+<hr>
+<h2><code>client.stream()</code></h2>
+<p>Sends a chat completion request and streams the response as it&#39;s generated.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function stream(
+  messages: Message[],
+  options?: ChatOptions
+): AsyncIterable&lt;string&gt;
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>messages</code></td>
+<td><code>Message[]</code></td>
+<td>Yes</td>
+<td>Array of messages forming the conversation</td>
+</tr>
+<tr>
+<td><code>options</code></td>
+<td><code>ChatOptions</code></td>
+<td>No</td>
+<td>Request-specific options</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>AsyncIterable&lt;string&gt;</code> — An async iterable yielding response chunks.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const stream = client.stream([
+  { role: &#39;user&#39;, content: &#39;Write a poem&#39; }
+])
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk)
+}
+</code></pre>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ValidationError</code> — If messages array is empty or contains invalid messages</li>
+<li><code>AuthError</code> — If API key is invalid</li>
+<li><code>RateLimitError</code> — If rate limit exceeded</li>
+<li><code>ModelError</code> — If model is unavailable</li>
+<li><code>NetworkError</code> — If network request fails</li>
+</ul>
+<hr>
+<h2><code>client.createConversation()</code></h2>
+<p>Creates a stateful conversation with automatic history management.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function createConversation(
+  options?: ConversationOptions
+): Conversation
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>options</code></td>
+<td><code>ConversationOptions</code></td>
+<td>No</td>
+<td>Conversation configuration</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>Conversation</code> — A conversation instance with send, sendStream, and history methods.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const conversation = client.createConversation({
+  system: &#39;You are a helpful assistant.&#39;
+})
+
+const reply = await conversation.send(&#39;Hello!&#39;)
+</code></pre>
+<hr>
+<h2><code>client.getModel()</code></h2>
+<p>Returns the current default model.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function getModel(): string
+</code></pre>
+<p><strong>Returns:</strong> <code>string</code> — The current model identifier.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">console.log(client.getModel())
+// &#39;anthropic/claude-sonnet-4&#39;
+</code></pre>
+<hr>
+<h2><code>client.setModel()</code></h2>
+<p>Changes the default model for future requests.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function setModel(model: string): void
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>model</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The new model identifier</td>
+</tr>
+</tbody></table>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">client.setModel(&#39;openai/gpt-4o&#39;)
+</code></pre>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ValidationError</code> — If model is empty</li>
+</ul>
+<hr>
+<h2><code>client.estimateChat()</code></h2>
+<p>Estimates token usage for a set of messages.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function estimateChat(
+  messages: Message[]
+): { prompt: number; available: number }
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>messages</code></td>
+<td><code>Message[]</code></td>
+<td>Yes</td>
+<td>Messages to estimate tokens for</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>{ prompt: number; available: number }</code> — Estimated prompt tokens and available context tokens.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const estimate = client.estimateChat([
+  { role: &#39;user&#39;, content: &#39;What is TypeScript?&#39; }
+])
+
+console.log(`Prompt: ${estimate.prompt} tokens`)
+console.log(`Available: ${estimate.available} tokens`)
+</code></pre>
+<hr>
+<h2>Types</h2>
+<h3><code>ClientOptions</code></h3>
+<pre><code class="language-typescript">interface ClientOptions {
+  apiKey: string
+  model: string
+  baseUrl?: string
+  defaultParams?: GenerationParams
+  referer?: string
+  title?: string
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>apiKey</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>API key for authentication</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>Default model identifier</td>
+</tr>
+<tr>
+<td><code>baseUrl</code></td>
+<td><code>string</code></td>
+<td>No</td>
+<td>API endpoint. Default: OpenRouter</td>
+</tr>
+<tr>
+<td><code>defaultParams</code></td>
+<td><code>GenerationParams</code></td>
+<td>No</td>
+<td>Default generation parameters</td>
+</tr>
+<tr>
+<td><code>referer</code></td>
+<td><code>string</code></td>
+<td>No</td>
+<td>HTTP-Referer for OpenRouter</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td><code>string</code></td>
+<td>No</td>
+<td>X-Title for OpenRouter</td>
+</tr>
+</tbody></table>
+<h3><code>ChatOptions</code></h3>
+<pre><code class="language-typescript">interface ChatOptions extends GenerationParams {
+  model?: string
+  signal?: AbortSignal
+  retry?: boolean
+  maxRetries?: number
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>model</code></td>
+<td><code>string</code></td>
+<td>No</td>
+<td>Override model for this request</td>
+</tr>
+<tr>
+<td><code>signal</code></td>
+<td><code>AbortSignal</code></td>
+<td>No</td>
+<td>Signal to cancel the request</td>
+</tr>
+<tr>
+<td><code>retry</code></td>
+<td><code>boolean</code></td>
+<td>No</td>
+<td>Enable/disable retries. Default: <code>true</code></td>
+</tr>
+<tr>
+<td><code>maxRetries</code></td>
+<td><code>number</code></td>
+<td>No</td>
+<td>Max retry attempts. Default: <code>3</code></td>
+</tr>
+<tr>
+<td><code>temperature</code></td>
+<td><code>number</code></td>
+<td>No</td>
+<td>Sampling temperature (0-2)</td>
+</tr>
+<tr>
+<td><code>maxTokens</code></td>
+<td><code>number</code></td>
+<td>No</td>
+<td>Maximum tokens to generate</td>
+</tr>
+<tr>
+<td><code>topP</code></td>
+<td><code>number</code></td>
+<td>No</td>
+<td>Nucleus sampling threshold</td>
+</tr>
+<tr>
+<td><code>stop</code></td>
+<td><code>string[]</code></td>
+<td>No</td>
+<td>Stop sequences</td>
+</tr>
+</tbody></table>
+<h3><code>LLMClient</code></h3>
+<pre><code class="language-typescript">interface LLMClient {
+  chat(messages: Message[], options?: ChatOptions): Promise&lt;ChatResponse&gt;
+  stream(messages: Message[], options?: ChatOptions): AsyncIterable&lt;string&gt;
+  createConversation(options?: ConversationOptions): Conversation
+  getModel(): string
+  setModel(model: string): void
+  estimateChat(messages: Message[]): { prompt: number; available: number }
+}
+</code></pre>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building Conversations - @motioneffector/llm</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/llm</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/llm" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/llm" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/llm</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-chat.html">Your First Chat</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-client.html">Client</a></li>
+<li><a href="concept-messages.html">Messages</a></li>
+<li><a href="concept-streaming.html">Streaming</a></li>
+<li><a href="concept-conversations.html">Conversations</a></li>
+<li><a href="concept-error-handling.html">Error Handling</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-sending-messages.html">Sending Messages</a></li>
+<li><a href="guide-streaming-responses.html">Streaming Responses</a></li>
+<li><a href="guide-building-conversations.html">Building Conversations</a></li>
+<li><a href="guide-error-handling.html">Error Handling</a></li>
+<li><a href="guide-canceling-requests.html">Canceling Requests</a></li>
+<li><a href="guide-using-different-providers.html">Using Different Providers</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-client.html">Client API</a></li>
+<li><a href="api-conversation.html">Conversation API</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+<li><a href="api-utilities.html">Utilities</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Building Conversations</h1>
+<p>Create multi-turn conversations with automatic history management. Conversations track context so each message builds on previous exchanges.</p>
+<h2>Prerequisites</h2>
+<p>Before starting, you should:</p>
+<ul>
+<li>Know the basics of <a href="guide-sending-messages.html">sending messages</a></li>
+<li>Understand the <a href="concept-messages.html">messages format</a></li>
+</ul>
+<h2>Overview</h2>
+<p>We&#39;ll build a conversation by:</p>
+<ol>
+<li>Creating a conversation with an optional system prompt</li>
+<li>Sending messages with <code>send()</code></li>
+<li>Accessing and managing history</li>
+<li>Resetting when needed</li>
+</ol>
+<h2>Step 1: Create the Conversation</h2>
+<p>Create a conversation from the client. Optionally provide a system prompt.</p>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+const conversation = client.createConversation({
+  system: &#39;You are a helpful coding assistant.&#39;
+})
+</code></pre>
+<h2>Step 2: Send Messages</h2>
+<p>Call <code>send()</code> with your message content. The conversation:</p>
+<ol>
+<li>Adds your message to history</li>
+<li>Sends all history to the API</li>
+<li>Adds the response to history</li>
+<li>Returns the response text</li>
+</ol>
+<pre><code class="language-typescript">const reply = await conversation.send(&#39;How do I read a file in Python?&#39;)
+console.log(reply)
+</code></pre>
+<h2>Step 3: Continue the Conversation</h2>
+<p>Each <code>send()</code> automatically includes previous context:</p>
+<pre><code class="language-typescript">const reply1 = await conversation.send(&#39;How do I read a file in Python?&#39;)
+console.log(reply1)
+
+const reply2 = await conversation.send(&#39;Now show me how to write to it.&#39;)
+console.log(reply2)
+// Model knows &quot;it&quot; refers to the file
+</code></pre>
+<h2>Step 4: Access History</h2>
+<p>Read the full conversation with <code>history</code>:</p>
+<pre><code class="language-typescript">console.log(conversation.history)
+// [
+//   { role: &#39;system&#39;, content: &#39;You are a helpful coding assistant.&#39; },
+//   { role: &#39;user&#39;, content: &#39;How do I read a file in Python?&#39; },
+//   { role: &#39;assistant&#39;, content: &#39;...&#39; },
+//   { role: &#39;user&#39;, content: &#39;Now show me how to write to it.&#39; },
+//   { role: &#39;assistant&#39;, content: &#39;...&#39; }
+// ]
+</code></pre>
+<h2>Complete Example</h2>
+<pre><code class="language-typescript">import { createLLMClient } from &#39;@motioneffector/llm&#39;
+
+const client = createLLMClient({
+  apiKey: process.env.OPENROUTER_KEY!,
+  model: &#39;anthropic/claude-sonnet-4&#39;
+})
+
+const conversation = client.createConversation({
+  system: &#39;You are a TypeScript expert. Be concise.&#39;
+})
+
+console.log(&#39;User: What is a generic type?&#39;)
+const reply1 = await conversation.send(&#39;What is a generic type?&#39;)
+console.log(`Assistant: ${reply1}\n`)
+
+console.log(&#39;User: Show me an example with arrays.&#39;)
+const reply2 = await conversation.send(&#39;Show me an example with arrays.&#39;)
+console.log(`Assistant: ${reply2}\n`)
+
+console.log(&#39;User: How do I constrain the type?&#39;)
+const reply3 = await conversation.send(&#39;How do I constrain the type?&#39;)
+console.log(`Assistant: ${reply3}\n`)
+
+console.log(`Total messages: ${conversation.history.length}`)
+</code></pre>
+<h2>Variations</h2>
+<h3>Without System Prompt</h3>
+<p>System prompt is optional:</p>
+<pre><code class="language-typescript">const conversation = client.createConversation()
+const reply = await conversation.send(&#39;Hello!&#39;)
+</code></pre>
+<h3>Streaming Responses</h3>
+<p>Use <code>sendStream()</code> for real-time output:</p>
+<pre><code class="language-typescript">const conversation = client.createConversation({
+  system: &#39;Tell engaging stories.&#39;
+})
+
+console.log(&#39;User: Tell me a story about a robot.&#39;)
+
+for await (const chunk of conversation.sendStream(&#39;Tell me a story about a robot.&#39;)) {
+  process.stdout.write(chunk)
+}
+
+console.log()
+// History includes the complete response
+</code></pre>
+<h3>Manually Adding Messages</h3>
+<p>Seed history without making API calls:</p>
+<pre><code class="language-typescript">const conversation = client.createConversation()
+
+// Inject prior context
+conversation.addMessage(&#39;user&#39;, &#39;My name is Alice.&#39;)
+conversation.addMessage(&#39;assistant&#39;, &#39;Nice to meet you, Alice!&#39;)
+
+// Continue naturally
+const reply = await conversation.send(&#39;What is my name?&#39;)
+// Model will know it&#39;s Alice
+</code></pre>
+<h3>Clearing History</h3>
+<p>Reset the conversation while keeping the system prompt:</p>
+<pre><code class="language-typescript">conversation.clear()
+// System prompt retained, messages cleared
+
+conversation.clearAll()
+// Everything cleared, including system prompt
+</code></pre>
+<h3>With Initial Messages</h3>
+<p>Pre-populate the conversation:</p>
+<pre><code class="language-typescript">const conversation = client.createConversation({
+  system: &#39;You are a math tutor.&#39;,
+  initialMessages: [
+    { role: &#39;user&#39;, content: &#39;What is 2+2?&#39; },
+    { role: &#39;assistant&#39;, content: &#39;2+2 equals 4.&#39; }
+  ]
+})
+
+const reply = await conversation.send(&#39;What about 3+3?&#39;)
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>ConcurrencyError</h3>
+<p><strong>Symptom:</strong> <code>ConcurrencyError: Cannot perform operation while a request is in progress</code></p>
+<p><strong>Cause:</strong> You called <code>send()</code> or <code>sendStream()</code> while another request is pending.</p>
+<p><strong>Solution:</strong> Wait for the previous request to complete:</p>
+<pre><code class="language-typescript">// Wrong
+conversation.send(&#39;First&#39;)  // Don&#39;t await
+conversation.send(&#39;Second&#39;) // Throws!
+
+// Right
+await conversation.send(&#39;First&#39;)
+await conversation.send(&#39;Second&#39;)
+</code></pre>
+<h3>History Too Long</h3>
+<p><strong>Symptom:</strong> Requests fail or become slow as conversation grows.</p>
+<p><strong>Cause:</strong> Context window exceeded or high token usage.</p>
+<p><strong>Solution:</strong> Use <code>clear()</code> to reset, or start a new conversation. Check <code>client.estimateChat(conversation.history)</code> to see token usage.</p>
+<h3>System Prompt Not Working</h3>
+<p><strong>Symptom:</strong> Model ignores system prompt instructions.</p>
+<p><strong>Cause:</strong> Some models handle system prompts differently.</p>
+<p><strong>Solution:</strong> Verify the system message is first in history with <code>console.log(conversation.history[0])</code>. Try rephrasing or being more explicit.</p>
+<h2>See Also</h2>
+<ul>
+<li><strong><a href="concept-conversations.html">Conversations</a></strong> - How conversations work</li>
+<li><strong><a href="guide-streaming-responses.html">Streaming Responses</a></strong> - Using <code>sendStream()</code></li>
+<li><strong><a href="api-conversation.html">Conversation API</a></strong> - Full method reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
