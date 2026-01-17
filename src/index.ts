@@ -1,5 +1,5 @@
 export { createLLMClient } from './core/client'
-export { getModelInfo } from './core/models'
+export { getModelInfo, MODELS } from './core/models'
 export { estimateTokens } from './utils/tokens'
 export {
   LLMError,
@@ -21,6 +21,7 @@ export type {
   ChatOptions,
   ConversationOptions,
   ModelInfo,
+  ModelEntry,
   LLMClient,
   Conversation,
 } from './types'

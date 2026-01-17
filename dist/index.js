@@ -98,7 +98,7 @@ async function z(t) {
   }
   throw r === 401 || r === 403 ? new K(e, r) : r === 404 ? new U(e, r) : new P(e, r);
 }
-async function N(t, e, r) {
+async function Y(t, e, r) {
   var f;
   const { maxRetries: i, shouldRetry: s, signal: n } = r;
   if (n != null && n.aborted)
@@ -241,17 +241,17 @@ function O(t, e, r) {
   function c(u, a) {
     l(), n = !0, s.push({ role: "user", content: u });
     const o = m(), h = e(o, a);
-    let E = "", A = !1, b;
+    let g = "", A = !1, b;
     return {
       async *[Symbol.asyncIterator]() {
         try {
-          for await (const g of h)
-            E += g, yield g;
+          for await (const E of h)
+            g += E, yield E;
           A = !0;
-        } catch (g) {
-          throw b = g, g;
+        } catch (E) {
+          throw b = E, E;
         } finally {
-          n = !1, A && !b ? s.push({ role: "assistant", content: E }) : b && s.pop();
+          n = !1, A && !b ? s.push({ role: "assistant", content: g }) : b && s.pop();
         }
       }
     };
@@ -288,7 +288,7 @@ function O(t, e, r) {
 function ee(t) {
   return t.length === 0 ? 0 : Math.ceil(t.length / 4);
 }
-const Y = {
+const C = {
   "anthropic/claude-sonnet-4": {
     contextLength: 2e5,
     pricing: {
@@ -326,10 +326,13 @@ const Y = {
   }
 };
 function te(t) {
-  if (!(t === "__proto__" || t === "constructor" || t === "prototype") && Object.hasOwn(Y, t))
-    return Y[t];
+  if (!(t === "__proto__" || t === "constructor" || t === "prototype") && Object.hasOwn(C, t))
+    return C[t];
 }
-const re = "https://openrouter.ai/api/v1", oe = 3;
+const ie = Object.entries(C).map(([t, e]) => ({
+  id: t,
+  ...e
+})), re = "https://openrouter.ai/api/v1", oe = 3;
 function ne(t) {
   if (!t.apiKey || t.apiKey.trim() === "")
     throw new T("apiKey is required and cannot be empty", "apiKey");
@@ -368,7 +371,7 @@ function F(t, e, r, i) {
 function se(t) {
   return t.includes("openrouter");
 }
-function ie(t) {
+function ce(t) {
   ne(t);
   const e = t.baseUrl ?? re, r = t.apiKey;
   let i = t.model;
@@ -384,10 +387,10 @@ function ie(t) {
     return `${e.endsWith("/") ? e.slice(0, -1) : e}/chat/completions`;
   }
   async function w(a, o) {
-    var j;
-    if ($(a), H(o), (j = o == null ? void 0 : o.signal) != null && j.aborted)
+    var N;
+    if ($(a), H(o), (N = o == null ? void 0 : o.signal) != null && N.aborted)
       throw new DOMException("The operation was aborted", "AbortError");
-    const h = Date.now(), E = (o == null ? void 0 : o.model) ?? i, A = q(s, o), b = F(a, E, A, !1), g = (o == null ? void 0 : o.maxRetries) ?? oe, k = (o == null ? void 0 : o.retry) !== !1, X = await N(
+    const h = Date.now(), g = (o == null ? void 0 : o.model) ?? i, A = q(s, o), b = F(a, g, A, !1), E = (o == null ? void 0 : o.maxRetries) ?? oe, k = (o == null ? void 0 : o.retry) !== !1, X = await Y(
       f(),
       {
         method: "POST",
@@ -396,18 +399,18 @@ function ie(t) {
         signal: o == null ? void 0 : o.signal
       },
       {
-        maxRetries: g,
+        maxRetries: E,
         shouldRetry: k,
         signal: o == null ? void 0 : o.signal
       }
     ), I = Date.now() - h;
-    let C;
+    let j;
     try {
-      C = await X.json();
+      j = await X.json();
     } catch (J) {
       throw new M("Failed to parse JSON response", J);
     }
-    const x = Q(C), D = x.choices[0];
+    const x = Q(j), D = x.choices[0];
     if (!D)
       throw new M("No choices in response");
     const W = D.message.content ?? "", B = x.usage ? {
@@ -429,17 +432,17 @@ function ie(t) {
     };
   }
   function c(a, o) {
-    var g;
-    if ($(a), H(o), (g = o == null ? void 0 : o.signal) != null && g.aborted)
+    var E;
+    if ($(a), H(o), (E = o == null ? void 0 : o.signal) != null && E.aborted)
       throw new DOMException("The operation was aborted", "AbortError");
-    const h = (o == null ? void 0 : o.model) ?? i, E = q(s, o), A = F(a, h, E, !0);
+    const h = (o == null ? void 0 : o.model) ?? i, g = q(s, o), A = F(a, h, g, !0);
     let b = !1;
     return {
       async *[Symbol.asyncIterator]() {
         if (b)
           return;
         b = !0;
-        const k = await N(
+        const k = await Y(
           f(),
           {
             method: "POST",
@@ -470,9 +473,9 @@ function ie(t) {
   }
   function u(a) {
     let h = 0;
-    for (const g of a)
-      h += ee(g.content), h += 3;
-    const E = te(i), A = (E == null ? void 0 : E.contextLength) ?? 128e3, b = Math.max(0, A - h);
+    for (const E of a)
+      h += ee(E.content), h += 3;
+    const g = te(i), A = (g == null ? void 0 : g.contextLength) ?? 128e3, b = Math.max(0, A - h);
     return { prompt: h, available: b };
   }
   return {
@@ -488,13 +491,14 @@ export {
   K as AuthError,
   V as ConcurrencyError,
   R as LLMError,
+  ie as MODELS,
   U as ModelError,
   L as NetworkError,
   M as ParseError,
   v as RateLimitError,
   P as ServerError,
   T as ValidationError,
-  ie as createLLMClient,
+  ce as createLLMClient,
   ee as estimateTokens,
   te as getModelInfo
 };

@@ -1,4 +1,4 @@
-import type { ModelInfo } from '../types'
+import type { ModelInfo, ModelEntry } from '../types'
 
 const MODEL_DATABASE: Record<string, ModelInfo> = {
   'anthropic/claude-sonnet-4': {
@@ -70,3 +70,12 @@ export function getModelInfo(modelId: string): ModelInfo | undefined {
 
   return MODEL_DATABASE[modelId]
 }
+
+/**
+ * Array of all supported models with their IDs and info.
+ * Useful for displaying model selection UI or validating model choices.
+ */
+export const MODELS: ModelEntry[] = Object.entries(MODEL_DATABASE).map(([id, info]) => ({
+  id,
+  ...info,
+}))

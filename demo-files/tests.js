@@ -2,6 +2,19 @@
 import * as Library from '../dist/index.js'
 if (!window.Library) window.Library = Library
 
+// Extract library exports for tests
+const {
+  createLLMClient,
+  estimateTokens,
+  MODELS,
+  getModelInfo,
+  ValidationError,
+  RateLimitError,
+  AuthError,
+  NetworkError,
+  LLMError
+} = window.Library
+
 // ============================================
 // DEMO INTEGRITY TESTS
 // These tests verify the demo itself is correctly structured.
@@ -16,8 +29,14 @@ function registerIntegrityTests() {
 
   testRunner.registerTest('[Integrity] Library is loaded', () => {
     if (typeof window.Library === 'undefined') {
-      // Allow undefined for simulated demos
-      console.warn('window.Library is undefined - using simulated mode');
+      throw new Error('window.Library is undefined - library not loaded')
+    }
+  });
+
+  testRunner.registerTest('[Integrity] Library has exports', () => {
+    const exports = Object.keys(window.Library)
+    if (exports.length === 0) {
+      throw new Error('window.Library has no exports')
     }
   });
 
@@ -186,10 +205,13 @@ function registerIntegrityTests() {
 
   testRunner.registerTest('[Integrity] Interactive elements have hover states', () => {
     const buttons = document.querySelectorAll('button, .btn')
-    if (buttons.length === 0) return
+    if (buttons.length === 0) return // No buttons to check
 
-    const btn = buttons[0]
-    const styles = window.getComputedStyle(btn)
+    // Check that enabled buttons have pointer cursor (disabled buttons should have not-allowed)
+    const enabledBtn = Array.from(buttons).find(btn => !btn.disabled)
+    if (!enabledBtn) return // All buttons are disabled, skip check
+
+    const styles = window.getComputedStyle(enabledBtn)
     if (styles.cursor !== 'pointer') {
       throw new Error('Buttons should have cursor: pointer')
     }
@@ -232,180 +254,318 @@ registerIntegrityTests()
 // LIBRARY-SPECIFIC TESTS
 // ============================================
 
-// Client creation tests (simulated for demo)
-testRunner.registerTest('createLLMClient requires apiKey', () => {
-  const hasValidation = true;
-  if (!hasValidation) throw new Error('Expected validation');
-});
-
-testRunner.registerTest('createLLMClient requires model', () => {
-  const hasValidation = true;
-  if (!hasValidation) throw new Error('Expected validation');
-});
-
-testRunner.registerTest('createLLMClient accepts valid config', () => {
-  // Would succeed with valid apiKey and model
-});
-
-testRunner.registerTest('client.getModel returns current model', () => {
-  const model = 'anthropic/claude-sonnet-4';
-  if (!model) throw new Error('Expected model string');
-});
-
-testRunner.registerTest('client.setModel changes model', () => {
-  let model = 'old-model';
-  model = 'new-model';
-  if (model !== 'new-model') throw new Error('Model not changed');
-});
-
-// Message validation tests
-testRunner.registerTest('chat rejects empty messages array', () => {
-  const messages = [];
-  if (messages.length === 0) {
-    // Would throw ValidationError
+// Client creation validation tests - these actually test the library
+testRunner.registerTest('createLLMClient throws ValidationError without apiKey', () => {
+  try {
+    createLLMClient({ model: 'test-model' })
+    throw new Error('Should have thrown ValidationError')
+  } catch (e) {
+    if (!(e instanceof ValidationError)) {
+      throw new Error(`Expected ValidationError, got ${e.constructor.name}: ${e.message}`)
+    }
+    if (!e.message.includes('apiKey')) {
+      throw new Error('Error should mention apiKey')
+    }
   }
 });
 
-testRunner.registerTest('chat rejects invalid role', () => {
-  const validRoles = ['system', 'user', 'assistant'];
-  const role = 'admin';
-  if (!validRoles.includes(role)) {
-    // Would throw ValidationError
+testRunner.registerTest('createLLMClient throws ValidationError without model', () => {
+  try {
+    createLLMClient({ apiKey: 'test-key' })
+    throw new Error('Should have thrown ValidationError')
+  } catch (e) {
+    if (!(e instanceof ValidationError)) {
+      throw new Error(`Expected ValidationError, got ${e.constructor.name}: ${e.message}`)
+    }
+    if (!e.message.includes('model')) {
+      throw new Error('Error should mention model')
+    }
   }
 });
 
-testRunner.registerTest('chat accepts valid message array', () => {
-  const messages = [{ role: 'user', content: 'hello' }];
-  if (!messages[0].role || !messages[0].content) throw new Error('Invalid message');
+testRunner.registerTest('createLLMClient throws ValidationError for empty apiKey', () => {
+  try {
+    createLLMClient({ apiKey: '', model: 'test-model' })
+    throw new Error('Should have thrown ValidationError')
+  } catch (e) {
+    if (!(e instanceof ValidationError)) {
+      throw new Error(`Expected ValidationError, got ${e.constructor.name}`)
+    }
+  }
 });
 
-// Token estimation tests
+testRunner.registerTest('createLLMClient throws ValidationError for empty model', () => {
+  try {
+    createLLMClient({ apiKey: 'test-key', model: '' })
+    throw new Error('Should have thrown ValidationError')
+  } catch (e) {
+    if (!(e instanceof ValidationError)) {
+      throw new Error(`Expected ValidationError, got ${e.constructor.name}`)
+    }
+  }
+});
+
+testRunner.registerTest('createLLMClient returns client with valid config', () => {
+  const client = createLLMClient({ apiKey: 'test-key', model: 'test-model' })
+  if (!client) throw new Error('Expected client to be created')
+  if (typeof client.chat !== 'function') throw new Error('Expected chat method')
+  if (typeof client.stream !== 'function') throw new Error('Expected stream method')
+  if (typeof client.getModel !== 'function') throw new Error('Expected getModel method')
+  if (typeof client.setModel !== 'function') throw new Error('Expected setModel method')
+});
+
+testRunner.registerTest('client.getModel returns configured model', () => {
+  const client = createLLMClient({ apiKey: 'test-key', model: 'anthropic/claude-sonnet-4' })
+  const model = client.getModel()
+  if (model !== 'anthropic/claude-sonnet-4') {
+    throw new Error(`Expected 'anthropic/claude-sonnet-4', got '${model}'`)
+  }
+});
+
+testRunner.registerTest('client.setModel changes the model', () => {
+  const client = createLLMClient({ apiKey: 'test-key', model: 'old-model' })
+  client.setModel('new-model')
+  const model = client.getModel()
+  if (model !== 'new-model') {
+    throw new Error(`Expected 'new-model', got '${model}'`)
+  }
+});
+
+testRunner.registerTest('client.setModel throws ValidationError for empty model', () => {
+  const client = createLLMClient({ apiKey: 'test-key', model: 'test-model' })
+  try {
+    client.setModel('')
+    throw new Error('Should have thrown ValidationError')
+  } catch (e) {
+    if (!(e instanceof ValidationError)) {
+      throw new Error(`Expected ValidationError, got ${e.constructor.name}`)
+    }
+  }
+});
+
+// Token estimation tests - these test real library functions
 testRunner.registerTest('estimateTokens returns number', () => {
-  const result = estimateTokens('hello world');
-  if (typeof result !== 'number') throw new Error('Expected number');
+  const result = estimateTokens('hello world')
+  if (typeof result !== 'number') throw new Error(`Expected number, got ${typeof result}`)
 });
 
 testRunner.registerTest('estimateTokens handles empty string', () => {
-  const result = estimateTokens('');
-  if (result !== 0) throw new Error('Expected 0 for empty string');
+  const result = estimateTokens('')
+  if (result !== 0) throw new Error(`Expected 0 for empty string, got ${result}`)
 });
 
 testRunner.registerTest('estimateTokens approximates ~4 chars per token', () => {
-  const text = 'hello world'; // 11 chars
-  const tokens = estimateTokens(text);
-  if (tokens < 2 || tokens > 4) throw new Error('Token estimate out of range');
+  const text = 'hello world' // 11 chars
+  const tokens = estimateTokens(text)
+  if (tokens < 2 || tokens > 5) {
+    throw new Error(`Token estimate ${tokens} out of expected range [2-5] for 11 chars`)
+  }
 });
 
-// Conversation tests
-testRunner.registerTest('conversation starts with empty history', () => {
-  const history = [];
-  if (history.length !== 0) throw new Error('Expected empty history');
+testRunner.registerTest('estimateTokens increases with longer text', () => {
+  const short = estimateTokens('hi')
+  const long = estimateTokens('This is a much longer sentence with many more words and characters.')
+  if (long <= short) {
+    throw new Error(`Longer text (${long} tokens) should have more tokens than short (${short})`)
+  }
 });
 
-testRunner.registerTest('conversation.send adds user message', () => {
-  const history = [];
-  history.push({ role: 'user', content: 'test' });
-  if (history.length !== 1) throw new Error('Message not added');
+// Error class tests - testing actual library error classes
+testRunner.registerTest('ValidationError is properly exported', () => {
+  if (typeof ValidationError !== 'function') {
+    throw new Error('ValidationError should be a constructor')
+  }
+  const error = new ValidationError('test message', 'testField')
+  if (error.name !== 'ValidationError') throw new Error(`Wrong name: ${error.name}`)
+  if (error.message !== 'test message') throw new Error(`Wrong message: ${error.message}`)
+  if (error.field !== 'testField') throw new Error(`Wrong field: ${error.field}`)
 });
 
-testRunner.registerTest('conversation.send adds assistant response', () => {
-  const history = [{ role: 'user', content: 'test' }];
-  history.push({ role: 'assistant', content: 'response' });
-  if (history.length !== 2) throw new Error('Response not added');
+testRunner.registerTest('RateLimitError includes status and retryAfter', () => {
+  if (typeof RateLimitError !== 'function') {
+    throw new Error('RateLimitError should be a constructor')
+  }
+  const error = new RateLimitError('Rate limited', 429, 60)
+  if (error.name !== 'RateLimitError') throw new Error(`Wrong name: ${error.name}`)
+  if (error.status !== 429) throw new Error(`Wrong status: ${error.status}`)
+  if (error.retryAfter !== 60) throw new Error(`Wrong retryAfter: ${error.retryAfter}`)
+});
+
+testRunner.registerTest('AuthError has status code', () => {
+  if (typeof AuthError !== 'function') {
+    throw new Error('AuthError should be a constructor')
+  }
+  const error = new AuthError('Unauthorized', 401)
+  if (error.name !== 'AuthError') throw new Error(`Wrong name: ${error.name}`)
+  if (error.status !== 401) throw new Error(`Wrong status: ${error.status}`)
+});
+
+testRunner.registerTest('NetworkError wraps underlying error', () => {
+  if (typeof NetworkError !== 'function') {
+    throw new Error('NetworkError should be a constructor')
+  }
+  const cause = new Error('connection timeout')
+  const error = new NetworkError('Network request failed', cause)
+  if (error.name !== 'NetworkError') throw new Error(`Wrong name: ${error.name}`)
+  if (error.cause !== cause) throw new Error('cause not preserved')
+});
+
+testRunner.registerTest('All error classes extend LLMError', () => {
+  const errors = [
+    new ValidationError('test'),
+    new RateLimitError('test', 429),
+    new AuthError('test', 401),
+    new NetworkError('test')
+  ]
+  for (const error of errors) {
+    if (!(error instanceof LLMError)) {
+      throw new Error(`${error.constructor.name} should extend LLMError`)
+    }
+  }
+});
+
+// Model info tests - testing actual library functions
+testRunner.registerTest('MODELS is an array with entries', () => {
+  if (!Array.isArray(MODELS)) throw new Error('MODELS should be an array')
+  if (MODELS.length === 0) throw new Error('MODELS should not be empty')
+});
+
+testRunner.registerTest('getModelInfo returns undefined for unknown model', () => {
+  const info = getModelInfo('unknown/nonexistent-model')
+  if (info !== undefined) throw new Error('Expected undefined for unknown model')
+});
+
+testRunner.registerTest('getModelInfo returns info for known model', () => {
+  const model = 'anthropic/claude-sonnet-4'
+  const info = getModelInfo(model)
+  if (!info) throw new Error(`Expected model info for ${model}`)
+});
+
+testRunner.registerTest('model info includes contextLength', () => {
+  const info = MODELS[0]
+  if (typeof info.contextLength !== 'number') {
+    throw new Error(`Expected contextLength to be a number, got ${typeof info.contextLength}`)
+  }
+  if (info.contextLength <= 0) {
+    throw new Error(`contextLength should be positive, got ${info.contextLength}`)
+  }
+});
+
+testRunner.registerTest('model info includes pricing', () => {
+  const info = MODELS[0]
+  if (!info.pricing || typeof info.pricing !== 'object') {
+    throw new Error('Expected pricing to be an object')
+  }
+  if (typeof info.pricing.prompt !== 'number') {
+    throw new Error(`Expected pricing.prompt to be a number, got ${typeof info.pricing?.prompt}`)
+  }
+  if (typeof info.pricing.completion !== 'number') {
+    throw new Error(`Expected pricing.completion to be a number, got ${typeof info.pricing?.completion}`)
+  }
+});
+
+testRunner.registerTest('model entries have id field', () => {
+  for (const model of MODELS) {
+    if (typeof model.id !== 'string' || model.id === '') {
+      throw new Error('Each model entry should have a non-empty id string')
+    }
+  }
+});
+
+// Client method structure tests
+testRunner.registerTest('client has createConversation method', () => {
+  const client = createLLMClient({ apiKey: 'test-key', model: 'test-model' })
+  if (typeof client.createConversation !== 'function') {
+    throw new Error('Expected createConversation method')
+  }
+});
+
+testRunner.registerTest('client has estimateChat method', () => {
+  const client = createLLMClient({ apiKey: 'test-key', model: 'test-model' })
+  if (typeof client.estimateChat !== 'function') {
+    throw new Error('Expected estimateChat method')
+  }
+});
+
+testRunner.registerTest('estimateChat returns prompt and available tokens', () => {
+  const client = createLLMClient({ apiKey: 'test-key', model: 'anthropic/claude-sonnet-4' })
+  const estimate = client.estimateChat([{ role: 'user', content: 'Hello!' }])
+  if (typeof estimate.prompt !== 'number') {
+    throw new Error(`Expected prompt to be a number, got ${typeof estimate.prompt}`)
+  }
+  if (typeof estimate.available !== 'number') {
+    throw new Error(`Expected available to be a number, got ${typeof estimate.available}`)
+  }
+  if (estimate.prompt <= 0) {
+    throw new Error(`Expected positive prompt tokens, got ${estimate.prompt}`)
+  }
+  if (estimate.available <= 0) {
+    throw new Error(`Expected positive available tokens, got ${estimate.available}`)
+  }
+});
+
+testRunner.registerTest('createConversation returns conversation object', () => {
+  const client = createLLMClient({ apiKey: 'test-key', model: 'test-model' })
+  const conversation = client.createConversation()
+  if (typeof conversation.send !== 'function') throw new Error('Expected send method')
+  if (typeof conversation.sendStream !== 'function') throw new Error('Expected sendStream method')
+  if (!Array.isArray(conversation.history)) throw new Error('Expected history array')
+  if (typeof conversation.clear !== 'function') throw new Error('Expected clear method')
+  if (typeof conversation.clearAll !== 'function') throw new Error('Expected clearAll method')
+});
+
+testRunner.registerTest('createConversation accepts system prompt', () => {
+  const client = createLLMClient({ apiKey: 'test-key', model: 'test-model' })
+  const conversation = client.createConversation({ system: 'You are helpful.' })
+  if (conversation.history.length !== 1) {
+    throw new Error(`Expected 1 system message, got ${conversation.history.length}`)
+  }
+  if (conversation.history[0].role !== 'system') {
+    throw new Error(`Expected system role, got ${conversation.history[0].role}`)
+  }
+  if (conversation.history[0].content !== 'You are helpful.') {
+    throw new Error('System message content mismatch')
+  }
+});
+
+testRunner.registerTest('conversation.addMessage adds to history', () => {
+  const client = createLLMClient({ apiKey: 'test-key', model: 'test-model' })
+  const conversation = client.createConversation()
+  conversation.addMessage('user', 'Hello')
+  conversation.addMessage('assistant', 'Hi there!')
+  if (conversation.history.length !== 2) {
+    throw new Error(`Expected 2 messages, got ${conversation.history.length}`)
+  }
+  if (conversation.history[0].content !== 'Hello') {
+    throw new Error('First message content mismatch')
+  }
+  if (conversation.history[1].content !== 'Hi there!') {
+    throw new Error('Second message content mismatch')
+  }
 });
 
 testRunner.registerTest('conversation.clear preserves system prompt', () => {
-  const system = { role: 'system', content: 'be helpful' };
-  const history = [system, { role: 'user', content: 'hi' }];
-  const cleared = [system];
-  if (cleared.length !== 1 || cleared[0].role !== 'system') {
-    throw new Error('System prompt not preserved');
+  const client = createLLMClient({ apiKey: 'test-key', model: 'test-model' })
+  const conversation = client.createConversation({ system: 'Be helpful' })
+  conversation.addMessage('user', 'test')
+  conversation.addMessage('assistant', 'response')
+  conversation.clear()
+  if (conversation.history.length !== 1) {
+    throw new Error(`Expected 1 message (system) after clear, got ${conversation.history.length}`)
+  }
+  if (conversation.history[0].role !== 'system') {
+    throw new Error('System prompt should be preserved')
   }
 });
 
 testRunner.registerTest('conversation.clearAll removes everything', () => {
-  const history = [
-    { role: 'system', content: 'test' },
-    { role: 'user', content: 'hi' }
-  ];
-  const cleared = [];
-  if (cleared.length !== 0) throw new Error('Not fully cleared');
-});
-
-// Error class tests
-testRunner.registerTest('ValidationError has correct name', () => {
-  const error = { name: 'ValidationError', message: 'test' };
-  if (error.name !== 'ValidationError') throw new Error('Wrong name');
-});
-
-testRunner.registerTest('RateLimitError includes retryAfter', () => {
-  const error = { name: 'RateLimitError', retryAfter: 60 };
-  if (typeof error.retryAfter !== 'number') throw new Error('Missing retryAfter');
-});
-
-testRunner.registerTest('AuthError has status code', () => {
-  const error = { name: 'AuthError', status: 401 };
-  if (error.status !== 401) throw new Error('Wrong status');
-});
-
-testRunner.registerTest('NetworkError wraps underlying error', () => {
-  const error = { name: 'NetworkError', cause: new Error('timeout') };
-  if (!error.cause) throw new Error('Missing cause');
-});
-
-// Model info tests
-testRunner.registerTest('getModelInfo returns undefined for unknown model', () => {
-  const model = 'unknown/model';
-  const info = MODELS.find(m => m.id === model);
-  if (info !== undefined) throw new Error('Expected undefined');
-});
-
-testRunner.registerTest('getModelInfo returns info for known model', () => {
-  const model = 'anthropic/claude-sonnet-4';
-  const info = MODELS.find(m => m.id === model);
-  if (!info) throw new Error('Expected model info');
-});
-
-testRunner.registerTest('model info includes contextLength', () => {
-  const info = MODELS[0];
-  if (typeof info.context !== 'number') throw new Error('Missing contextLength');
-});
-
-testRunner.registerTest('model info includes pricing', () => {
-  const info = MODELS[0];
-  if (typeof info.promptCost !== 'number') throw new Error('Missing pricing');
-});
-
-// Streaming tests
-testRunner.registerTest('stream returns async iterable', () => {
-  const stream = { [Symbol.asyncIterator]: () => {} };
-  if (!stream[Symbol.asyncIterator]) throw new Error('Not async iterable');
-});
-
-testRunner.registerTest('stream chunks are strings', () => {
-  const chunk = 'hello';
-  if (typeof chunk !== 'string') throw new Error('Chunk not string');
-});
-
-// Options tests
-testRunner.registerTest('temperature accepts 0', () => {
-  const temp = 0;
-  if (temp < 0 || temp > 2) throw new Error('Out of range');
-});
-
-testRunner.registerTest('temperature accepts 2', () => {
-  const temp = 2;
-  if (temp < 0 || temp > 2) throw new Error('Out of range');
-});
-
-testRunner.registerTest('maxTokens accepts positive number', () => {
-  const max = 100;
-  if (max <= 0) throw new Error('Must be positive');
-});
-
-testRunner.registerTest('stop accepts string array', () => {
-  const stop = ['END', '---'];
-  if (!Array.isArray(stop)) throw new Error('Must be array');
+  const client = createLLMClient({ apiKey: 'test-key', model: 'test-model' })
+  const conversation = client.createConversation({ system: 'Be helpful' })
+  conversation.addMessage('user', 'test')
+  conversation.clearAll()
+  if (conversation.history.length !== 0) {
+    throw new Error(`Expected 0 messages after clearAll, got ${conversation.history.length}`)
+  }
 });
 
 // ============================================

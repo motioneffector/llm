@@ -110,6 +110,14 @@ export interface ModelInfo {
 }
 
 /**
+ * A model entry with its ID and full information.
+ */
+export interface ModelEntry extends ModelInfo {
+  /** The model identifier (e.g., 'anthropic/claude-sonnet-4') */
+  id: string
+}
+
+/**
  * Main interface for the LLM client.
  */
 export interface LLMClient {
