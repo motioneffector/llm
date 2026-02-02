@@ -6,7 +6,6 @@ A TypeScript client for LLM APIs with OpenRouter support, streaming responses, c
 [![license](https://img.shields.io/npm/l/@motioneffector/llm.svg)](https://github.com/motioneffector/llm/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
-**[Try the interactive demo →](https://motioneffector.github.io/llm/)**
 
 ## Features
 
