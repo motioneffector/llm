@@ -3,38 +3,46 @@ import * as LLM from './index'
 
 describe('Module Exports', () => {
   it('exports createLLMClient function', () => {
-    expect(LLM.createLLMClient).toBeDefined()
-    expect(typeof LLM.createLLMClient).toBe('function')
+    const createLLMClient = LLM.createLLMClient
+    expect(createLLMClient).toBe(LLM.createLLMClient)
+    const client = createLLMClient({ apiKey: 'sk-test', model: 'test' })
+    expect(client.getModel()).toBe('test')
   })
 
   it('exports estimateTokens function', () => {
-    expect(LLM.estimateTokens).toBeDefined()
-    expect(typeof LLM.estimateTokens).toBe('function')
+    const estimateTokens = LLM.estimateTokens
+    expect(estimateTokens).toBe(LLM.estimateTokens)
+    const result = estimateTokens('Hello')
+    expect(result).toBe(2)
   })
 
   it('exports getModelInfo function', () => {
-    expect(LLM.getModelInfo).toBeDefined()
-    expect(typeof LLM.getModelInfo).toBe('function')
+    const getModelInfo = LLM.getModelInfo
+    expect(getModelInfo).toBe(LLM.getModelInfo)
+    const info = getModelInfo('anthropic/claude-sonnet-4')
+    expect(info).toEqual({
+      contextLength: 200000,
+      pricing: { prompt: 3.0, completion: 15.0 },
+    })
   })
 
   it('exports error classes', () => {
-    expect(LLM.ValidationError).toBeDefined()
-    expect(LLM.RateLimitError).toBeDefined()
-    expect(LLM.AuthError).toBeDefined()
-    expect(LLM.ModelError).toBeDefined()
-    expect(LLM.ServerError).toBeDefined()
-    expect(LLM.NetworkError).toBeDefined()
-    expect(LLM.ParseError).toBeDefined()
-    expect(LLM.ConcurrencyError).toBeDefined()
-
-    expect(typeof LLM.ValidationError).toBe('function')
-    expect(typeof LLM.RateLimitError).toBe('function')
-    expect(typeof LLM.AuthError).toBe('function')
-    expect(typeof LLM.ModelError).toBe('function')
-    expect(typeof LLM.ServerError).toBe('function')
-    expect(typeof LLM.NetworkError).toBe('function')
-    expect(typeof LLM.ParseError).toBe('function')
-    expect(typeof LLM.ConcurrencyError).toBe('function')
+    const valErr = new LLM.ValidationError('test')
+    expect(valErr.name).toBe('ValidationError')
+    const rateErr = new LLM.RateLimitError('test', 429)
+    expect(rateErr.name).toBe('RateLimitError')
+    const authErr = new LLM.AuthError('test', 401)
+    expect(authErr.name).toBe('AuthError')
+    const modelErr = new LLM.ModelError('test', 404)
+    expect(modelErr.name).toBe('ModelError')
+    const serverErr = new LLM.ServerError('test', 500)
+    expect(serverErr.name).toBe('ServerError')
+    const netErr = new LLM.NetworkError('test')
+    expect(netErr.name).toBe('NetworkError')
+    const parseErr = new LLM.ParseError('test')
+    expect(parseErr.name).toBe('ParseError')
+    const concErr = new LLM.ConcurrencyError('test')
+    expect(concErr.name).toBe('ConcurrencyError')
   })
 
   it('exports TypeScript types', () => {

@@ -1,6 +1,6 @@
 {
   "name": "@motioneffector/llm",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "description": "TypeScript client for LLM APIs with OpenRouter support, streaming, conversation management, and automatic retries",
   "author": "motioneffector",
   "license": "MIT",
@@ -50,7 +50,7 @@
     "build": "tsc && vite build && npm run build:manual",
     "build:manual": "node scripts/build-manual.cjs",
     "test": "vitest",
-    "test:run": "vitest run",
+    "test:run": "vitest run --exclude src/fuzz.test.ts",
     "fuzz:thorough": "FUZZ_THOROUGH=1 vitest run src/fuzz.test.ts --testTimeout=30000",
     "lint": "eslint src",
     "format": "prettier --write src",

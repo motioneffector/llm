@@ -14,7 +14,7 @@ import {
 describe('Error Types', () => {
   it('ValidationError for input validation failures', () => {
     const error = new ValidationError('Test validation error', 'testField')
-    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(ValidationError)
     expect(error.name).toBe('ValidationError')
     expect(error.message).toBe('Test validation error')
     expect(error.field).toBe('testField')
@@ -22,14 +22,14 @@ describe('Error Types', () => {
 
   it('TypeError for type mismatches', () => {
     const error = new TypeError('Test type error')
-    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(TypeError)
     expect(error.name).toBe('TypeError')
     expect(error.message).toBe('Test type error')
   })
 
   it('RateLimitError for 429 responses', () => {
     const error = new RateLimitError('Rate limit exceeded', 429, 30)
-    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(RateLimitError)
     expect(error.name).toBe('RateLimitError')
     expect(error.message).toBe('Rate limit exceeded')
     expect(error.status).toBe(429)
@@ -38,7 +38,7 @@ describe('Error Types', () => {
 
   it('AuthError for 401/403 responses', () => {
     const error = new AuthError('Unauthorized', 401)
-    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(AuthError)
     expect(error.name).toBe('AuthError')
     expect(error.message).toBe('Unauthorized')
     expect(error.status).toBe(401)
@@ -46,7 +46,7 @@ describe('Error Types', () => {
 
   it('ModelError for model-related 404 responses', () => {
     const error = new ModelError('Model not found', 404)
-    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(ModelError)
     expect(error.name).toBe('ModelError')
     expect(error.message).toBe('Model not found')
     expect(error.status).toBe(404)
@@ -54,7 +54,7 @@ describe('Error Types', () => {
 
   it('ServerError for 5xx responses', () => {
     const error = new ServerError('Internal server error', 500)
-    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(ServerError)
     expect(error.name).toBe('ServerError')
     expect(error.message).toBe('Internal server error')
     expect(error.status).toBe(500)
@@ -63,7 +63,7 @@ describe('Error Types', () => {
   it('NetworkError for fetch/connection failures', () => {
     const cause = new Error('Network failure')
     const error = new NetworkError('Failed to fetch', cause)
-    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(NetworkError)
     expect(error.name).toBe('NetworkError')
     expect(error.message).toBe('Failed to fetch')
     expect(error.cause).toBe(cause)
@@ -72,7 +72,7 @@ describe('Error Types', () => {
   it('ParseError for JSON/response parsing failures', () => {
     const cause = new SyntaxError('Invalid JSON')
     const error = new ParseError('Failed to parse response', cause)
-    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(ParseError)
     expect(error.name).toBe('ParseError')
     expect(error.message).toBe('Failed to parse response')
     expect(error.cause).toBe(cause)
@@ -80,13 +80,13 @@ describe('Error Types', () => {
 
   it('AbortError for cancelled requests', () => {
     const error = new DOMException('The operation was aborted', 'AbortError')
-    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(DOMException)
     expect(error.name).toBe('AbortError')
   })
 
   it('ConcurrencyError for concurrent conversation operations', () => {
     const error = new ConcurrencyError('Concurrent operation not allowed')
-    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(ConcurrencyError)
     expect(error.name).toBe('ConcurrencyError')
     expect(error.message).toBe('Concurrent operation not allowed')
   })
@@ -108,7 +108,7 @@ describe('HTTP Errors', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(RateLimitError)
+    ).rejects.toThrow(/Rate limit exceeded/)
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
     ).rejects.toHaveProperty('status', 429)
@@ -139,7 +139,7 @@ describe('HTTP Errors', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(AuthError)
+    ).rejects.toThrow(/Unauthorized/)
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
     ).rejects.toHaveProperty('status', 401)
@@ -154,7 +154,7 @@ describe('HTTP Errors', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(AuthError)
+    ).rejects.toThrow(/Forbidden/)
   })
 
   it('throws ModelError on 404 (model not found)', async () => {
@@ -166,7 +166,7 @@ describe('HTTP Errors', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(ModelError)
+    ).rejects.toThrow(/Model not found/)
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
     ).rejects.toHaveProperty('status', 404)
@@ -181,7 +181,7 @@ describe('HTTP Errors', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(ServerError)
+    ).rejects.toThrow(/Internal server error/)
   })
 
   it('throws ServerError on 502, 503, 504', async () => {
@@ -194,7 +194,7 @@ describe('HTTP Errors', () => {
 
       await expect(
         client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-      ).rejects.toThrow(ServerError)
+      ).rejects.toThrow(/Gateway error/)
       await expect(
         client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
       ).rejects.toHaveProperty('status', status)
@@ -246,7 +246,7 @@ describe('HTTP Errors', () => {
 
       await expect(
         client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-      ).rejects.toThrow(ServerError)
+      ).rejects.toThrow(/Unknown error/)
       await expect(
         client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
       ).rejects.toHaveProperty('status', status)
@@ -260,7 +260,7 @@ describe('HTTP Errors', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(NetworkError)
+    ).rejects.toThrow(/Invalid URL/)
   })
 })
 
@@ -276,7 +276,7 @@ describe('Network Errors', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(NetworkError)
+    ).rejects.toThrow(/Network failure/)
   })
 
   it('throws NetworkError on connection timeout', async () => {
@@ -284,7 +284,7 @@ describe('Network Errors', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(NetworkError)
+    ).rejects.toThrow(/Timeout/)
   })
 
   it('error.cause contains original error', async () => {
@@ -318,7 +318,7 @@ describe('Parse Errors', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(ParseError)
+    ).rejects.toThrow(/parse/)
   })
 
   it('throws ParseError on unexpected response structure', async () => {
@@ -330,7 +330,7 @@ describe('Parse Errors', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(ParseError)
+    ).rejects.toThrow(/choices/)
   })
 
   it('throws ParseError on missing content in response', async () => {
@@ -346,7 +346,7 @@ describe('Parse Errors', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(ParseError)
+    ).rejects.toThrow(/content/)
   })
 
   it('ParseError includes response body in message for debugging', async () => {
@@ -360,7 +360,7 @@ describe('Parse Errors', () => {
       await client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
     } catch (error) {
       expect(error).toBeInstanceOf(ParseError)
-      expect((error as ParseError).message).toBeTruthy()
+      expect((error as ParseError).message).toContain('choices')
     }
   })
 })

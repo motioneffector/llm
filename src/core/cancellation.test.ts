@@ -46,14 +46,13 @@ describe('client.chat(messages, { signal })', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { signal: controller.signal })
-    ).rejects.toThrow(DOMException)
+    ).rejects.toThrow(/aborted/)
 
     try {
       await client.chat([{ role: 'user', content: 'Hello' }], { signal: controller.signal })
     } catch (error) {
-      if (error instanceof DOMException) {
-        expect(error.name).toBe('AbortError')
-      }
+      expect(error).toBeInstanceOf(DOMException)
+      expect((error as DOMException).name).toBe('AbortError')
     }
   })
 
@@ -76,9 +75,7 @@ describe('client.chat(messages, { signal })', () => {
       expect.fail('Should have thrown')
     } catch (error) {
       expect(error).toBeInstanceOf(DOMException)
-      if (error instanceof DOMException) {
-        expect(error.name).toBe('AbortError')
-      }
+      expect((error as DOMException).name).toBe('AbortError')
     }
   })
 
@@ -88,14 +85,13 @@ describe('client.chat(messages, { signal })', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { signal: controller.signal })
-    ).rejects.toThrow(DOMException)
+    ).rejects.toThrow(/aborted/)
 
     try {
       await client.chat([{ role: 'user', content: 'Hello' }], { signal: controller.signal })
     } catch (error) {
-      if (error instanceof DOMException) {
-        expect(error.name).toBe('AbortError')
-      }
+      expect(error).toBeInstanceOf(DOMException)
+      expect((error as DOMException).name).toBe('AbortError')
     }
 
     expect(fetch).not.toHaveBeenCalled()
@@ -123,10 +119,9 @@ describe('client.chat(messages, { signal })', () => {
       await client.chat([{ role: 'user', content: 'Hello' }], { signal: controller.signal })
       expect.fail('Should have thrown')
     } catch (error) {
-      if (error instanceof DOMException) {
-        // @ts-expect-error - Checking cause property
-        expect(error.cause).toBe(reason)
-      }
+      expect(error).toBeInstanceOf(DOMException)
+      // @ts-expect-error - Checking cause property
+      expect((error as DOMException).cause).toBe(reason)
     }
   })
 })
@@ -202,10 +197,10 @@ describe('client.stream(messages, { signal })', () => {
         chunks.push(chunk)
       }
     } catch (e) {
-      // Expected abort error
+      expect(e).toBeInstanceOf(DOMException)
     }
 
-    expect(chunks.length).toBeGreaterThan(0)
+    expect(chunks[0]).toBe('Hello')
   })
 
   it('throws AbortError when stream is aborted', async () => {
@@ -242,9 +237,7 @@ describe('client.stream(messages, { signal })', () => {
       expect.fail('Should have thrown AbortError')
     } catch (error) {
       expect(error).toBeInstanceOf(DOMException)
-      if (error instanceof DOMException) {
-        expect(error.name).toBe('AbortError')
-      }
+      expect((error as DOMException).name).toBe('AbortError')
     }
   })
 
@@ -284,10 +277,9 @@ describe('client.stream(messages, { signal })', () => {
         iterations++
       }
     } catch (e) {
-      // Expected abort
+      expect(e).toBeInstanceOf(DOMException)
     }
 
-    expect(chunks.length).toBeGreaterThan(0)
     expect(chunks[0]).toBe('Hello')
   })
 
@@ -304,9 +296,7 @@ describe('client.stream(messages, { signal })', () => {
       expect.fail('Should have thrown AbortError')
     } catch (error) {
       expect(error).toBeInstanceOf(DOMException)
-      if (error instanceof DOMException) {
-        expect(error.name).toBe('AbortError')
-      }
+      expect((error as DOMException).name).toBe('AbortError')
     }
   })
 })
@@ -353,9 +343,7 @@ describe('Abort During Retry', () => {
       expect.fail('Should have thrown AbortError')
     } catch (error) {
       expect(error).toBeInstanceOf(DOMException)
-      if (error instanceof DOMException) {
-        expect(error.name).toBe('AbortError')
-      }
+      expect((error as DOMException).name).toBe('AbortError')
     }
   })
 })

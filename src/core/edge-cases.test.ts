@@ -50,7 +50,9 @@ describe('Request Edge Cases', () => {
       client.chat([{ role: 'user', content: 'C' }]),
     ])
 
-    expect(results).toHaveLength(3)
+    expect(results[0].content).toBe('Response')
+    expect(results[1].content).toBe('Response')
+    expect(results[2].content).toBe('Response')
     expect(fetch).toHaveBeenCalledTimes(3)
   })
 
@@ -179,12 +181,13 @@ describe('Conversation Edge Cases', () => {
     const conversation = client.createConversation()
 
     await conversation.send('First message')
-    expect(conversation.history.length).toBeGreaterThan(0)
+    expect(conversation.history[0]).toEqual({ role: 'user', content: 'First message' })
 
     conversation.clear()
 
     await conversation.send('Second message')
-    expect(conversation.history.length).toBe(2)
+    expect(conversation.history[0]).toEqual({ role: 'user', content: 'Second message' })
+    expect(conversation.history[1]).toEqual({ role: 'assistant', content: 'Response' })
   })
 
   it('conversation works after error', async () => {
@@ -227,7 +230,6 @@ describe('Conversation Edge Cases', () => {
     }
 
     const historyAfter = conversation.history
-    expect(Array.isArray(historyAfter)).toBe(true)
-    expect(historyAfter.length).toBeGreaterThanOrEqual(historyBefore)
+    expect(historyAfter[0]).toEqual({ role: 'user', content: 'Hello' })
   })
 })

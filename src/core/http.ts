@@ -83,8 +83,9 @@ async function handleErrorResponse(response: Response): Promise<never> {
       if (textError) {
         errorMessage = textError
       }
-    } catch {
-      // Use default error message
+    } catch (textErr) {
+      // Body unreadable — fall through with default `HTTP ${status}` message
+      errorMessage = errorMessage || `HTTP ${response.status}`
     }
   }
 
@@ -94,7 +95,8 @@ async function handleErrorResponse(response: Response): Promise<never> {
     let retryAfterSeconds: number | undefined
     try {
       const retryAfter = response.headers?.get('Retry-After')
-      retryAfterSeconds = retryAfter ? parseInt(retryAfter, 10) : undefined
+      const parsed = retryAfter ? parseInt(retryAfter, 10) : NaN
+      retryAfterSeconds = isNaN(parsed) ? undefined : parsed
     } catch {
       retryAfterSeconds = undefined
     }
@@ -148,7 +150,8 @@ export async function fetchWithRetry(
           if (status === 429) {
             try {
               const retryAfterHeader = response.headers?.get('Retry-After')
-              retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : undefined
+              const parsed = retryAfterHeader ? parseInt(retryAfterHeader, 10) : NaN
+              retryAfter = isNaN(parsed) ? undefined : parsed
             } catch {
               retryAfter = undefined
             }

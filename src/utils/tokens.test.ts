@@ -5,9 +5,7 @@ import { createLLMClient } from '../core/client'
 describe('estimateTokens(text)', () => {
   it('returns estimated token count for string', () => {
     const result = estimateTokens('Hello world')
-    expect(typeof result).toBe('number')
-    expect(result).toBeGreaterThan(0)
-    expect(result).toBeLessThan(10)
+    expect(result).toBe(3)
   })
 
   it('returns 0 for empty string', () => {
@@ -23,8 +21,7 @@ describe('estimateTokens(text)', () => {
 
   it('handles unicode correctly', () => {
     const result = estimateTokens('你好世界')
-    expect(typeof result).toBe('number')
-    expect(result).toBeGreaterThan(0)
+    expect(result).toBe(1)
   })
 
   it('rounds to nearest integer', () => {
@@ -42,9 +39,7 @@ describe('client.estimateChat(messages)', () => {
 
   it('estimates tokens for full message array', () => {
     const result = client.estimateChat([{ role: 'user', content: 'Hello' }])
-    expect(result).toHaveProperty('prompt')
-    expect(typeof result.prompt).toBe('number')
-    expect(result.prompt).toBeGreaterThan(0)
+    expect(result.prompt).toBe(5)
   })
 
   it('accounts for message structure overhead', () => {
@@ -69,9 +64,7 @@ describe('client.estimateChat(messages)', () => {
 
   it('returns available tokens based on model context', () => {
     const result = client.estimateChat([{ role: 'user', content: 'Hello' }])
-    expect(result).toHaveProperty('available')
-    expect(typeof result.available).toBe('number')
-    expect(result.available).toBeGreaterThan(0)
+    expect(result.available).toBe(199995)
   })
 
   it('uses default context limit if model unknown', () => {

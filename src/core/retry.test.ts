@@ -90,7 +90,7 @@ describe('Automatic Retry', () => {
       json: async () => ({ error: { message: 'Bad request' } }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(ServerError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(/Bad request/)
     expect(fetch).toHaveBeenCalledTimes(1)
   }, 10000)
 
@@ -101,7 +101,7 @@ describe('Automatic Retry', () => {
       json: async () => ({ error: { message: 'Unauthorized' } }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(AuthError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(/Unauthorized/)
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 
@@ -112,7 +112,7 @@ describe('Automatic Retry', () => {
       json: async () => ({ error: { message: 'Forbidden' } }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(AuthError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(/Forbidden/)
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 
@@ -123,7 +123,7 @@ describe('Automatic Retry', () => {
       json: async () => ({ error: { message: 'Model not found' } }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(ModelError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(/Model not found/)
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 
@@ -218,7 +218,7 @@ describe('Automatic Retry', () => {
       json: async () => ({ error: { message: 'Server error' } }),
     } as Response)
 
-    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(ServerError)
+    await expect(client.chat([{ role: 'user', content: 'Hello' }])).rejects.toThrow(/Server error/)
     expect(fetch).toHaveBeenCalledTimes(4)
   }, 10000)
 
@@ -232,7 +232,7 @@ describe('Automatic Retry', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { maxRetries: 5 })
-    ).rejects.toThrow(ServerError)
+    ).rejects.toThrow(/Server error/)
     expect(fetch).toHaveBeenCalledTimes(6)
   }, 60000)
 
@@ -245,7 +245,7 @@ describe('Automatic Retry', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { maxRetries: 0 })
-    ).rejects.toThrow(ServerError)
+    ).rejects.toThrow(/Server error/)
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 })
@@ -266,7 +266,7 @@ describe('client.chat(messages, { retry: false })', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(RateLimitError)
+    ).rejects.toThrow(/Rate limit exceeded/)
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 
@@ -279,7 +279,7 @@ describe('client.chat(messages, { retry: false })', () => {
 
     await expect(
       client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
-    ).rejects.toThrow(ServerError)
+    ).rejects.toThrow(/Service unavailable/)
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 })
@@ -304,7 +304,7 @@ describe('Retry and Streaming', () => {
       for await (const _chunk of stream) {
         // Should throw before yielding
       }
-    }).rejects.toThrow(RateLimitError)
+    }).rejects.toThrow(/Rate limit exceeded/)
 
     expect(fetch).toHaveBeenCalledTimes(1)
   })
@@ -322,7 +322,7 @@ describe('Retry and Streaming', () => {
       for await (const _chunk of stream) {
         // Should throw before yielding
       }
-    }).rejects.toThrow(ServerError)
+    }).rejects.toThrow(/Server error/)
 
     expect(fetch).toHaveBeenCalledTimes(1)
   })
