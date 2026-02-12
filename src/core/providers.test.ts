@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createLLMClient } from './client'
+import { ServerError } from '../errors'
 
 describe('OpenRouter Specifics', () => {
   let client: ReturnType<typeof createLLMClient>
@@ -66,8 +67,8 @@ describe('OpenRouter Specifics', () => {
     try {
       await client.chat([{ role: 'user', content: 'Hello' }], { retry: false })
     } catch (error) {
-      expect(error).toBeInstanceOf(Error)
-      expect((error as Error).message).toContain('Invalid request')
+      expect(error).toBeInstanceOf(ServerError)
+      expect((error as ServerError).message).toBe('Invalid request')
     }
   })
 })
@@ -144,8 +145,10 @@ describe('Base URL Override', () => {
     const fetchCall = vi.mocked(fetch).mock.calls[0]
     const headers = fetchCall[1]?.headers as Record<string, string>
 
-    expect(headers['HTTP-Referer']).toBeUndefined()
-    expect(headers['X-Title']).toBeUndefined()
+    const hasReferer = 'HTTP-Referer' in headers
+    expect(hasReferer).toBe(false)
+    const hasTitle = 'X-Title' in headers
+    expect(hasTitle).toBe(false)
   })
 
   it('includes OpenRouter headers if URL contains openrouter', async () => {

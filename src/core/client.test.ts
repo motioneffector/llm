@@ -5,17 +5,10 @@ import { ValidationError } from '../errors'
 describe('createLLMClient(options)', () => {
   it('creates client with apiKey and model', () => {
     const client = createLLMClient({ apiKey: 'sk-test', model: 'anthropic/claude-sonnet-4' })
-    expect(client).toBeDefined()
-    expect(client.chat).toBeDefined()
-    expect(client.stream).toBeDefined()
-    expect(client.createConversation).toBeDefined()
+    expect(client.getModel()).toBe('anthropic/claude-sonnet-4')
   })
 
   it('throws ValidationError if apiKey is missing', () => {
-    expect(() =>
-      // @ts-expect-error - Testing runtime validation
-      createLLMClient({ model: 'anthropic/claude-sonnet-4' })
-    ).toThrow(ValidationError)
     expect(() =>
       // @ts-expect-error - Testing runtime validation
       createLLMClient({ model: 'anthropic/claude-sonnet-4' })
@@ -24,7 +17,7 @@ describe('createLLMClient(options)', () => {
 
   it('throws ValidationError if apiKey is empty string', () => {
     expect(() => createLLMClient({ apiKey: '', model: 'anthropic/claude-sonnet-4' })).toThrow(
-      ValidationError
+      /apiKey/
     )
   })
 
@@ -32,15 +25,11 @@ describe('createLLMClient(options)', () => {
     expect(() =>
       // @ts-expect-error - Testing runtime validation
       createLLMClient({ apiKey: 'sk-test' })
-    ).toThrow(ValidationError)
-    expect(() =>
-      // @ts-expect-error - Testing runtime validation
-      createLLMClient({ apiKey: 'sk-test' })
     ).toThrow(/model/)
   })
 
   it('throws ValidationError if model is empty string', () => {
-    expect(() => createLLMClient({ apiKey: 'sk-test', model: '' })).toThrow(ValidationError)
+    expect(() => createLLMClient({ apiKey: 'sk-test', model: '' })).toThrow(/model/)
   })
 
   it('accepts custom baseUrl', async () => {

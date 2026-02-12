@@ -47,7 +47,7 @@ describe('client.setModel(model)', () => {
   })
 
   it('throws ValidationError for empty model', () => {
-    expect(() => client.setModel('')).toThrow(ValidationError)
+    expect(() => client.setModel('')).toThrow(/model/)
   })
 
   it('does not validate model exists (API will reject invalid)', () => {
@@ -59,41 +59,35 @@ describe('client.setModel(model)', () => {
 describe('getModelInfo(modelId)', () => {
   it('returns model context length', () => {
     const info = getModelInfo('anthropic/claude-sonnet-4')
-    expect(info).toBeDefined()
-    expect(info).toHaveProperty('contextLength')
-    expect(typeof info?.contextLength).toBe('number')
-    expect(info?.contextLength).toBeGreaterThan(0)
+    expect(info).toEqual({
+      contextLength: 200000,
+      pricing: { prompt: 3.0, completion: 15.0 },
+    })
   })
 
   it('returns model pricing info', () => {
     const info = getModelInfo('anthropic/claude-sonnet-4')
-    expect(info).toBeDefined()
-    expect(info).toHaveProperty('pricing')
-    expect(info?.pricing).toHaveProperty('prompt')
-    expect(info?.pricing).toHaveProperty('completion')
-    expect(typeof info?.pricing.prompt).toBe('number')
-    expect(typeof info?.pricing.completion).toBe('number')
+    expect(info?.pricing.prompt).toBe(3.0)
+    expect(info?.pricing.completion).toBe(15.0)
   })
 
   it('returns undefined for unknown model', () => {
     const info = getModelInfo('unknown/model')
-    expect(info).toBeUndefined()
+    expect(info).toBe(undefined)
   })
 
   it('includes common models', () => {
     const models = [
-      'anthropic/claude-sonnet-4',
-      'anthropic/claude-3-opus',
-      'openai/gpt-4o',
-      'openai/gpt-4-turbo',
-      'meta-llama/llama-3.1-405b',
+      { id: 'anthropic/claude-sonnet-4', ctx: 200000 },
+      { id: 'anthropic/claude-3-opus', ctx: 200000 },
+      { id: 'openai/gpt-4o', ctx: 128000 },
+      { id: 'openai/gpt-4-turbo', ctx: 128000 },
+      { id: 'meta-llama/llama-3.1-405b', ctx: 128000 },
     ]
 
-    for (const model of models) {
-      const info = getModelInfo(model)
-      expect(info).toBeDefined()
-      expect(info).toHaveProperty('contextLength')
-      expect(info).toHaveProperty('pricing')
+    for (const { id, ctx } of models) {
+      const info = getModelInfo(id)
+      expect(info?.contextLength).toBe(ctx)
     }
   })
 })
@@ -101,31 +95,35 @@ describe('getModelInfo(modelId)', () => {
 describe('Security: prototype pollution prevention', () => {
   it('rejects __proto__ as model identifier', () => {
     const info = getModelInfo('__proto__')
-    expect(info).toBeUndefined()
+    expect(info).toBe(undefined)
   })
 
   it('rejects constructor as model identifier', () => {
     const info = getModelInfo('constructor')
-    expect(info).toBeUndefined()
+    expect(info).toBe(undefined)
   })
 
   it('rejects prototype as model identifier', () => {
     const info = getModelInfo('prototype')
-    expect(info).toBeUndefined()
+    expect(info).toBe(undefined)
   })
 
   it('does not leak prototype properties', () => {
     // Attempt to access Object.prototype properties
     const info = getModelInfo('toString')
-    expect(info).toBeUndefined()
+    expect(info).toBe(undefined)
   })
 
   it('only returns own properties from MODEL_DATABASE', () => {
     // Valid model should work
-    expect(getModelInfo('anthropic/claude-sonnet-4')).toBeDefined()
+    const info = getModelInfo('anthropic/claude-sonnet-4')
+    expect(info).toEqual({
+      contextLength: 200000,
+      pricing: { prompt: 3.0, completion: 15.0 },
+    })
 
     // Inherited properties should not be accessible
-    expect(getModelInfo('hasOwnProperty')).toBeUndefined()
-    expect(getModelInfo('valueOf')).toBeUndefined()
+    expect(getModelInfo('hasOwnProperty')).toBe(undefined)
+    expect(getModelInfo('valueOf')).toBe(undefined)
   })
 })

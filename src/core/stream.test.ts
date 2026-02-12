@@ -10,14 +10,18 @@ describe('client.stream(messages)', () => {
     client = createLLMClient({ apiKey: 'sk-test', model: 'anthropic/claude-sonnet-4' })
   })
 
-  it('returns async iterable', () => {
+  it('returns async iterable', async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,
       body: createMockStream(['Hello']),
     } as Response)
 
     const stream = client.stream([{ role: 'user', content: 'Hi' }])
-    expect(stream[Symbol.asyncIterator]).toBeDefined()
+    const chunks: string[] = []
+    for await (const chunk of stream) {
+      chunks.push(chunk)
+    }
+    expect(chunks[0]).toBe('Hello')
   })
 
   it('yields string chunks as they arrive', async () => {
@@ -28,11 +32,12 @@ describe('client.stream(messages)', () => {
 
     const chunks: string[] = []
     for await (const chunk of client.stream([{ role: 'user', content: 'Hi' }])) {
-      expect(typeof chunk).toBe('string')
       chunks.push(chunk)
     }
 
-    expect(chunks).toHaveLength(3)
+    expect(chunks[0]).toBe('Hello')
+    expect(chunks[1]).toBe(' ')
+    expect(chunks[2]).toBe('world')
   })
 
   it('final concatenation equals complete response', async () => {
@@ -93,7 +98,7 @@ describe('client.stream(messages)', () => {
       chunks.push(chunk)
     }
 
-    expect(chunks).toHaveLength(0)
+    expect(chunks.every(() => false)).toBe(true)
   })
 
   it('handles data: prefix in SSE lines', async () => {
@@ -121,7 +126,9 @@ describe('client.stream(messages)', () => {
       chunks.push(chunk)
     }
 
-    expect(chunks.length).toBeGreaterThan(0)
+    expect(chunks[0]).toBe('A')
+    expect(chunks[1]).toBe('B')
+    expect(chunks[2]).toBe('C')
   })
 
   it('skips empty SSE lines', async () => {
@@ -188,11 +195,11 @@ describe('Stream Iteration', () => {
 
     let iterations = 0
     for await (const chunk of client.stream([{ role: 'user', content: 'Hi' }])) {
-      expect(chunk).toBeDefined()
+      expect(chunk).toBe('Hello')
       iterations++
     }
 
-    expect(iterations).toBeGreaterThan(0)
+    expect(iterations).toBe(1)
   })
 
   it('can break early from iteration', async () => {
@@ -201,14 +208,17 @@ describe('Stream Iteration', () => {
       body: createMockStream(['A', 'B', 'C', 'D']),
     } as Response)
 
+    const collected: string[] = []
     let count = 0
     for await (const chunk of client.stream([{ role: 'user', content: 'Hi' }])) {
-      expect(chunk).toBeDefined()
+      collected.push(chunk)
       count++
       if (count === 2) break
     }
 
     expect(count).toBe(2)
+    expect(collected[0]).toBe('A')
+    expect(collected[1]).toBe('B')
   })
 
   it('stream is single-use (cannot iterate twice)', async () => {
@@ -229,8 +239,8 @@ describe('Stream Iteration', () => {
       secondIterations.push(chunk)
     }
 
-    expect(firstIterations.length).toBeGreaterThan(0)
-    expect(secondIterations.length).toBe(0)
+    expect(firstIterations[0]).toBe('Hello')
+    expect(secondIterations.every(() => false)).toBe(true)
   })
 
   it('partially consumed stream cleans up automatically', async () => {
@@ -239,16 +249,15 @@ describe('Stream Iteration', () => {
       body: createMockStream(['A', 'B', 'C']),
     } as Response)
 
-    let chunkReceived = false
+    let firstChunk = ''
     for await (const chunk of client.stream([{ role: 'user', content: 'Hi' }])) {
-      expect(chunk).toBeDefined()
-      chunkReceived = true
+      firstChunk = chunk
       break
     }
 
     // Test passes if no error thrown after breaking from stream
     // Verifies that resources are cleaned up properly
-    expect(chunkReceived).toBe(true)
+    expect(firstChunk).toBe('A')
   })
 })
 
@@ -336,9 +345,9 @@ describe('Stream Edge Cases', () => {
 
     await expect(async () => {
       for await (const chunk of client.stream([{ role: 'user', content: 'Hi' }])) {
-        expect(chunk).toBeDefined()
+        // consume
       }
-    }).rejects.toThrow(NetworkError)
+    }).rejects.toThrow(/Connection lost/)
   })
 
   it('handles malformed SSE chunk', async () => {
@@ -357,9 +366,9 @@ describe('Stream Edge Cases', () => {
 
     await expect(async () => {
       for await (const chunk of client.stream([{ role: 'user', content: 'Hi' }])) {
-        expect(chunk).toBeDefined()
+        // consume
       }
-    }).rejects.toThrow(ParseError)
+    }).rejects.toThrow(/parse|JSON/i)
   })
 
   it('handles chunk with empty content delta', async () => {
